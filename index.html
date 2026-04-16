@@ -337,7 +337,9 @@ function updRisk(){
   if(riskSelYears.size===0){document.getElementById('select-year-risk').style.display='block';document.getElementById('result-risk').style.display='none';return;}
   document.getElementById('select-year-risk').style.display='none';document.getElementById('result-risk').style.display='block';
   const f=riskData.filter(d=>riskSelYears.has(String(d.入學學年))&&(riskSelStatus==='all'||d.最終學籍狀況===riskSelStatus));
-  const hi=f.filter(d=>d.整體風險==='高風險'),mi=f.filter(d=>d.整體風險==='中風險'),lo=f.filter(d=>d.整體風險==='低風險');
+  const hi=f.filter(d=>d.整體風險==='高風險').sort((a,b)=>b.總分-a.總分);
+  const mi=f.filter(d=>d.整體風險==='中風險').sort((a,b)=>b.總分-a.總分);
+  const lo=f.filter(d=>d.整體風險==='低風險').sort((a,b)=>b.總分-a.總分);
   ['high','mid','low'].forEach((k,i)=>{const arr=[hi,mi,lo][i];document.getElementById(`cnt-${k}`).textContent=arr.length;document.getElementById(`lbl-${k}`).textContent=arr.length+' 人';});
   renderRisk('rows-high',hi);renderRisk('rows-mid',mi);renderRisk('rows-low',lo);
 }
