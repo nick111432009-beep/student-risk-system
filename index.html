@@ -1411,6 +1411,68 @@ function processRiskFile(file){
 
   r.readAsArrayBuffer(file);
 }
+function buildYF(type, data, selSet){
+  const box = document.getElementById(`year-btns-${type}`);
+  if(!box) return;
+
+  box.querySelectorAll('.year-btn[data-year]').forEach(b=>b.remove());
+
+  const years = [...new Set(
+    data.map(d => String(d.入學學年 || '')).filter(Boolean)
+  )].sort();
+
+  years.forEach(y=>{
+    const btn = document.createElement('button');
+    btn.className = 'year-btn';
+    btn.dataset.year = y;
+    btn.textContent = y;
+
+    btn.onclick = ()=>{
+      if(selSet.has(y)){
+        selSet.delete(y);
+        btn.classList.remove('active');
+      }else{
+        selSet.add(y);
+        btn.classList.add('active');
+      }
+
+      if(type === 'risk'){
+        updRisk();
+      }else{
+        updModel();
+      }
+    };
+
+    box.appendChild(btn);
+  });
+
+  const btnAll = document.getElementById(`btn-all-${type}`);
+  const btnClear = document.getElementById(`btn-clear-${type}`);
+
+  if(btnAll){
+    btnAll.onclick = ()=>{
+      years.forEach(y => selSet.add(y));
+      box.querySelectorAll('.year-btn[data-year]').forEach(b=>b.classList.add('active'));
+      if(type === 'risk'){
+        updRisk();
+      }else{
+        updModel();
+      }
+    };
+  }
+
+  if(btnClear){
+    btnClear.onclick = ()=>{
+      selSet.clear();
+      box.querySelectorAll('.year-btn[data-year]').forEach(b=>b.classList.remove('active'));
+      if(type === 'risk'){
+        updRisk();
+      }else{
+        updModel();
+      }
+    };
+  }
+}
 async function processModelFile(file){
   showL('讀取 Excel 中...');
 
