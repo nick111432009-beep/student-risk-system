@@ -73,8 +73,17 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 .badge-amber{background:var(--amber-light);color:var(--amber)}
 .badge-green{background:var(--green-light);color:var(--green)}
 .risk-count{font-size:13px;color:var(--text-secondary)}
-.chevron{font-size:12px;color:var(--text-muted);transition:transform 0.2s}
-.chevron.open{transform:rotate(180deg)}
+.chevron{
+  font-size:12px;
+  color:var(--text-muted);
+  transition:transform 0.25s ease;
+  display:inline-block;   /* ⭐ 關鍵 */
+  transform:rotate(0deg); /* ⭐ 預設角度 */
+}
+
+.chevron.open{
+  transform:rotate(180deg);
+}
 .table-wrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse}
 thead th{font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.04em;padding:10px 16px;text-align:left;background:var(--bg);border-top:1px solid var(--border);white-space:nowrap}
@@ -513,7 +522,13 @@ function updModel(){
   const lo=f.filter(d=>d.預測結果===1),hi=f.filter(d=>d.預測結果===0);
   document.getElementById('cnt-pred-low').textContent=lo.length;document.getElementById('cnt-pred-high').textContent=hi.length;document.getElementById('cnt-pred-total').textContent=f.length;
   document.getElementById('lbl-pred-low').textContent=lo.length+' 人';document.getElementById('lbl-pred-high').textContent=hi.length+' 人';
-  renderModel('rows-pred-low',lo);renderModel('rows-pred-high',hi);
+  const lo = f
+  .filter(d => d.預測結果 === 1)
+  .sort((a, b) => b.預測機率 - a.預測機率);
+
+const hi = f
+  .filter(d => d.預測結果 === 0)
+  .sort((a, b) => b.預測機率 - a.預測機率);
   renderCharts(f);
 }
 
