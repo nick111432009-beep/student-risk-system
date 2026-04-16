@@ -304,6 +304,49 @@ function buildFeatures(row,h){
   return[row['性別_編碼']||0,row['入學方式_編碼']||0,row['學制_編碼']||0,row['系所_編碼']||0,總曠,總缺,總假,mx(曠c),lv(曠c)-fv(曠c),fv(曠c),mx(缺c),lv(缺c)-fv(缺c),lv(請c)-fv(請c),mx(請c),總缺/學分,總缺>0?總曠/總缺:0,後半/前半,s(曠c,0),s(曠c,1),s(曠c,2),s(曠c,3),s(曠c,4),s(缺c,0),s(缺c,1),s(缺c,2),s(缺c,3),s(請c,1),s(請c,2),s(請c,3),s(請c,4),功,補];
 }
 
+
+function extractProbabilities(probOutput, batchSize) {
+  // 目標：統一取出 class=1 的機率
+  // 支援 3 種常見輸出：
+  // 1. Tensor [N, 2]
+  // 2. Tensor [N]
+  // 3. Sequence<Map>（ZipMap）
+  if (!probOutput) {
+    return Array(batchSize).fill(0.5);
+  }
+
+  // ---- Case 1: 純 tensor，shape [N, 2] ----
+  if (probOutput.data && probOutput.dims && probOutput.dims.length === 2 && probOutput.dims[1] === 2) {
+    const arr = probOutput.data;
+    const probs = [];
+    for (let i = 0; i < batchSize; i++) {
+      probs.push(Number(arr[i * 2 + 1]) || 0);
+    }
+    return probs;
+  }
+
+  // ---- Case 2: 純 tensor，shape [N] ----
+  if (probOutput.data && probOutput.dims && probOutput.dims.length === 1) {
+    return Array.from(probOutput.data).map(v => Number(v) || 0);
+  }
+
+  // ---- Case 3: ZipMap，可能是陣列，每筆像 {0:0.3,1:0.7} ----
+  if (Array.isArray(probOutput)) {
+    return probOutput.map(p => {
+      if (p instanceof Map) {
+        return Number(p.get(1) ?? p.get('1') ?? 0.5);
+      }
+      if (typeof p === 'object' && p !== null) {
+        return Number(p[1] ?? p['1'] ?? 0.5);
+      }
+      return 0.5;
+    });
+  }
+
+  return Array(batchSize).fill(0.5);
+}
+
+
 function processRiskFile(file){
   showL('讀取 Excel 中...');const r=new FileReader();
   r.onload=e=>{try{
@@ -320,31 +363,114 @@ function processRiskFile(file){
   }catch(err){hideL();alert('讀取失敗：'+err.message);}};r.readAsArrayBuffer(file);
 }
 
+
 async function processModelFile(file){
   showL('讀取 Excel 中...');
   try{
-    const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});const raw=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:null});
-    if(!raw.length){hideL();alert('沒有資料！');return;}
-    const h=Object.keys(raw[0]);
-    document.getElementById('file-loaded-model').style.display='flex';document.getElementById('upload-zone-model').style.display='none';
-    document.getElementById('file-name-model').textContent=file.name;document.getElementById('file-info-model').textContent=`共 ${raw.length} 筆`;
-    setP('model',20,'載入 AI 模型中...');
-    if(!onnxSess)onnxSess=await ort.InferenceSession.create('./xgboost_model.onnx');
-    setP('model',40,'進行特徵工程...');
-    const 性M={},入M={},制M={},所M={};
-    raw.forEach(r=>{if(r['性別']&&!(r['性別']in 性M))性M[r['性別']]=Object.keys(性M).length;if(r['入學方式']&&!(r['入學方式']in 入M))入M[r['入學方式']]=Object.keys(入M).length;if(r['學制']&&!(r['學制']in 制M))制M[r['學制']]=Object.keys(制M).length;if(r['系所名稱']&&!(r['系所名稱']in 所M))所M[r['系所名稱']]=Object.keys(所M).length;});
-    const enc=raw.map(r=>({...r,'性別_編碼':性M[r['性別']]??0,'入學方式_編碼':入M[r['入學方式']]??0,'學制_編碼':制M[r['學制']]??0,'系所_編碼':所M[r['系所名稱']]??0}));
-    setP('model',50,'AI 預測中...');const results=[];const bs=100;
-    for(let i=0;i<enc.length;i+=bs){
-      const batch=enc.slice(i,i+bs);const flat=new Float32Array(batch.map(r=>buildFeatures(r,h)).flat());
-      const tensor=new ort.Tensor('float32',flat,[batch.length,32]);const out=await onnxSess.run({'float_input':tensor});
-      const preds=out['output_label']?.data||out[Object.keys(out)[0]]?.data||[];const probs=out['output_probability']?.data||[];
-      batch.forEach((r,j)=>{const pred=Number(preds[j])||0;const prob=probs.length>0?Math.max(probs[j*2]||0,probs[j*2+1]||0):0.5;results.push({學生識別碼:r['學生識別碼']||'',系所名稱:r['系所名稱']||'',入學學年:r['入學學年']||'',最終學籍狀況:lastStatus(r,h),預測結果:pred,預測標籤:pred===1?'學習成效低（後50%）':'學習成效高（前50%）',預測機率:prob});});
-      setP('model',50+Math.round((i/enc.length)*40),'AI 預測中...');
+    const wb = XLSX.read(await file.arrayBuffer(), {type:'array'});
+    const raw = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {defval:null});
+
+    if(!raw.length){
+      hideL();
+      alert('沒有資料！');
+      return;
     }
-    modelData=results;setP('model',100,'完成！');
-    setTimeout(()=>{hideL();buildYF('model',modelData,modelSelYears);document.getElementById('filter-card-model').style.display='block';document.getElementById('empty-state-model').style.display='none';document.getElementById('select-year-model').style.display='block';},400);
-  }catch(err){hideL();alert('預測失敗：'+err.message);console.error(err);}
+
+    const h = Object.keys(raw[0]);
+
+    document.getElementById('file-loaded-model').style.display = 'flex';
+    document.getElementById('upload-zone-model').style.display = 'none';
+    document.getElementById('file-name-model').textContent = file.name;
+    document.getElementById('file-info-model').textContent = `共 ${raw.length} 筆`;
+
+    setP('model', 20, '載入 AI 模型中...');
+
+    if(!onnxSess){
+      onnxSess = await ort.InferenceSession.create('./xgboost_model.onnx');
+      console.log('ONNX inputs:', onnxSess.inputNames);
+      console.log('ONNX outputs:', onnxSess.outputNames);
+    }
+
+    setP('model', 40, '進行特徵工程...');
+
+    // 類別編碼（要和訓練時邏輯一致；目前先沿用你現行做法）
+    const 性M = {}, 入M = {}, 制M = {}, 所M = {};
+    raw.forEach(r => {
+      if(r['性別'] && !(r['性別'] in 性M)) 性M[r['性別']] = Object.keys(性M).length;
+      if(r['入學方式'] && !(r['入學方式'] in 入M)) 入M[r['入學方式']] = Object.keys(入M).length;
+      if(r['學制'] && !(r['學制'] in 制M)) 制M[r['學制']] = Object.keys(制M).length;
+      if(r['系所名稱'] && !(r['系所名稱'] in 所M)) 所M[r['系所名稱']] = Object.keys(所M).length;
+    });
+
+    const enc = raw.map(r => ({
+      ...r,
+      '性別_編碼': 性M[r['性別']] ?? 0,
+      '入學方式_編碼': 入M[r['入學方式']] ?? 0,
+      '學制_編碼': 制M[r['學制']] ?? 0,
+      '系所_編碼': 所M[r['系所名稱']] ?? 0
+    }));
+
+    setP('model', 50, 'AI 預測中...');
+
+    const results = [];
+    const bs = 100;
+
+    for(let i = 0; i < enc.length; i += bs){
+      const batch = enc.slice(i, i + bs);
+
+      const featureRows = batch.map(r => buildFeatures(r, h));
+      const flat = new Float32Array(featureRows.flat());
+      const tensor = new ort.Tensor('float32', flat, [batch.length, 32]);
+
+      const feeds = {};
+      const inputName = onnxSess.inputNames[0] || 'float_input';
+      feeds[inputName] = tensor;
+
+      const out = await onnxSess.run(feeds);
+
+      // 取得輸出
+      const outputNames = Object.keys(out);
+      const labelOutput = out['output_label'] || out[outputNames[0]];
+      const probOutput  = out['output_probability'] || out[outputNames[1]];
+
+      const preds = labelOutput?.data ? Array.from(labelOutput.data).map(v => Number(v)) : Array(batch.length).fill(0);
+      const probClass1 = extractProbabilities(probOutput, batch.length);
+
+      batch.forEach((r, j) => {
+        const pred = Number(preds[j]) || 0;
+        const prob = Math.max(0, Math.min(1, Number(probClass1[j]) || 0));
+
+        results.push({
+          學生識別碼: r['學生識別碼'] || '',
+          系所名稱: r['系所名稱'] || '',
+          入學學年: r['入學學年'] || '',
+          最終學籍狀況: lastStatus(r, h),
+          預測結果: pred,
+          預測標籤: pred === 1 ? '學習成效低（後50%）' : '學習成效高（前50%）',
+          預測機率: prob
+        });
+      });
+
+      setP('model', 50 + Math.round(((i + batch.length) / enc.length) * 40), 'AI 預測中...');
+    }
+
+    modelData = results;
+
+    setP('model', 100, '完成！');
+
+    setTimeout(() => {
+      hideL();
+      buildYF('model', modelData, modelSelYears);
+      document.getElementById('filter-card-model').style.display = 'block';
+      document.getElementById('empty-state-model').style.display = 'none';
+      document.getElementById('select-year-model').style.display = 'block';
+    }, 400);
+
+  } catch(err){
+    hideL();
+    alert('預測失敗：' + err.message);
+    console.error(err);
+  }
 }
 
 function buildYF(type,data,sel){
