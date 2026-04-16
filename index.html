@@ -507,19 +507,37 @@ function updRisk(){
 }
 
 function updModel(){
-  if(modelSelYears.size===0){document.getElementById('select-year-model').style.display='block';document.getElementById('result-model').style.display='none';return;}
-  document.getElementById('select-year-model').style.display='none';document.getElementById('result-model').style.display='block';
-  const f=modelData.filter(d=>modelSelYears.has(String(d.入學學年))&&(modelSelPred==='all'||d.預測結果===parseInt(modelSelPred)));
-  const lo=f.filter(d=>d.預測結果===1),hi=f.filter(d=>d.預測結果===0);
-  document.getElementById('cnt-pred-low').textContent=lo.length;document.getElementById('cnt-pred-high').textContent=hi.length;document.getElementById('cnt-pred-total').textContent=f.length;
-  document.getElementById('lbl-pred-low').textContent=lo.length+' 人';document.getElementById('lbl-pred-high').textContent=hi.length+' 人';
-  const lo = f
-  .filter(d => d.預測結果 === 1)
-  .sort((a, b) => b.預測機率 - a.預測機率);
+  if(modelSelYears.size===0){
+    document.getElementById('select-year-model').style.display='block';
+    document.getElementById('result-model').style.display='none';
+    return;
+  }
 
-const hi = f
-  .filter(d => d.預測結果 === 0)
-  .sort((a, b) => b.預測機率 - a.預測機率);
+  document.getElementById('select-year-model').style.display='none';
+  document.getElementById('result-model').style.display='block';
+
+  const f = modelData.filter(
+    d => modelSelYears.has(String(d.入學學年)) &&
+         (modelSelPred==='all' || d.預測結果===parseInt(modelSelPred))
+  );
+
+  const lo = f
+    .filter(d => d.預測結果 === 1)
+    .sort((a, b) => b.預測機率 - a.預測機率);
+
+  const hi = f
+    .filter(d => d.預測結果 === 0)
+    .sort((a, b) => b.預測機率 - a.預測機率);
+
+  document.getElementById('cnt-pred-low').textContent = lo.length;
+  document.getElementById('cnt-pred-high').textContent = hi.length;
+  document.getElementById('cnt-pred-total').textContent = f.length;
+
+  document.getElementById('lbl-pred-low').textContent = lo.length + ' 人';
+  document.getElementById('lbl-pred-high').textContent = hi.length + ' 人';
+
+  renderModel('rows-pred-low', lo);
+  renderModel('rows-pred-high', hi);
   renderCharts(f);
 }
 
