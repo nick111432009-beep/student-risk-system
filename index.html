@@ -162,7 +162,7 @@ tbody tr.data-row.expanded td{background:var(--blue-light)}
 
   <!-- 分頁二：AI 模型預測 -->
   <div id="tab-model" class="tab-content">
-    <div class="model-info">AI 模型說明：本系統使用 XGBoost 機器學習模型（準確率 76.2%，5折交叉驗證 75.9%），以缺曠率、出缺席行為、入學背景等 32 個特徵，預測學生最終學習成效是否落於班級後 50%。所有計算在您的電腦本機進行，資料不會上傳至任何伺服器。</div>
+    <div class="model-info">AI 模型說明：本系統使用 XGBoost 機器學習模型（準確率 76.2%，5折交叉驗證 75.9%），以缺曠率、出缺席行為、入學背景等 32 個特徵，預測學生最終學習成效落於班級後 50% 的機率，並依機率高低分為高風險（>80%）、中風險（>50%～80%）、低風險（≤50%）三個等級。所有計算在您的電腦本機進行，資料不會上傳至任何伺服器。</div>
     <div class="upload-card">
       <div class="upload-zone" id="upload-zone-model">
         <div class="upload-icon">🤖</div>
@@ -188,9 +188,9 @@ tbody tr.data-row.expanded td{background:var(--blue-light)}
         <div class="filter-label">風險等級篩選</div>
         <div class="status-btns" id="pred-btns">
           <button class="status-btn active" data-pred="all">全部</button>
-          <button class="status-btn" data-pred="high">🔴 高風險（≥80%）</button>
-          <button class="status-btn" data-pred="mid">🟡 中風險（50-79%）</button>
-          <button class="status-btn" data-pred="low">🟢 低風險（＜50%）</button>
+          <button class="status-btn" data-pred="high">🔴 高風險（>80%）</button>
+          <button class="status-btn" data-pred="mid">🟡 中風險（>50%～80%）</button>
+          <button class="status-btn" data-pred="low">🟢 低風險（≤50%）</button>
         </div>
       </div>
     </div>
@@ -198,9 +198,9 @@ tbody tr.data-row.expanded td{background:var(--blue-light)}
     <div class="empty-state" id="select-year-model" style="display:none"><div class="empty-state-icon">🗓️</div><div class="empty-state-title">請選擇入學學年</div><div class="empty-state-text">從上方篩選器選擇一個或多個學年</div></div>
     <div id="result-model" style="display:none">
       <div class="metrics-grid">
-        <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-red"></span>高風險（≥80%）</div><div class="metric-num" id="cnt-model-high">0</div><div class="metric-sub">人</div></div>
-        <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-amber"></span>中風險（50-79%）</div><div class="metric-num" id="cnt-model-mid">0</div><div class="metric-sub">人</div></div>
-        <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-green"></span>低風險（＜50%）</div><div class="metric-num" id="cnt-model-low">0</div><div class="metric-sub">人</div></div>
+        <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-red"></span>高風險（>80%）</div><div class="metric-num" id="cnt-model-high">0</div><div class="metric-sub">人</div></div>
+        <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-amber"></span>中風險（>50%～80%）</div><div class="metric-num" id="cnt-model-mid">0</div><div class="metric-sub">人</div></div>
+        <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-green"></span>低風險（≤50%）</div><div class="metric-num" id="cnt-model-low">0</div><div class="metric-sub">人</div></div>
       </div>
       <div class="charts-grid">
         <div class="chart-card"><div class="chart-card-title">📊 預測機率分布</div><div class="chart-container"><canvas id="chart-prob"></canvas></div></div>
@@ -208,9 +208,9 @@ tbody tr.data-row.expanded td{background:var(--blue-light)}
         <div class="chart-card"><div class="chart-card-title">📈 各入學學年高風險比例</div><div class="chart-container"><canvas id="chart-year"></canvas></div></div>
         <div class="chart-card"><div class="chart-card-title">🔍 特徵重要性（前10名）</div><div class="chart-container"><canvas id="chart-feat"></canvas></div></div>
       </div>
-      <div class="risk-section"><div class="risk-header" onclick="toggleMod('model-high')"><div class="risk-header-left"><span class="risk-badge badge-red">🔴 高風險（≥80%）</span><span class="risk-count" id="lbl-model-high">0 人</span></div><span class="chevron open" id="chev-model-high">▼</span></div><div id="body-model-high"><div class="table-wrap"><table><thead><tr><th>學生識別碼</th><th>系所名稱</th><th>入學學年</th><th>學籍</th><th>風險等級</th><th>預測機率</th></tr></thead><tbody id="rows-model-high"></tbody></table></div></div></div>
-      <div class="risk-section"><div class="risk-header" onclick="toggleMod('model-mid')"><div class="risk-header-left"><span class="risk-badge badge-amber">🟡 中風險（50-79%）</span><span class="risk-count" id="lbl-model-mid">0 人</span></div><span class="chevron" id="chev-model-mid">▼</span></div><div id="body-model-mid" style="display:none"><div class="table-wrap"><table><thead><tr><th>學生識別碼</th><th>系所名稱</th><th>入學學年</th><th>學籍</th><th>風險等級</th><th>預測機率</th></tr></thead><tbody id="rows-model-mid"></tbody></table></div></div></div>
-      <div class="risk-section"><div class="risk-header" onclick="toggleMod('model-low')"><div class="risk-header-left"><span class="risk-badge badge-green">🟢 低風險（＜50%）</span><span class="risk-count" id="lbl-model-low">0 人</span></div><span class="chevron" id="chev-model-low">▼</span></div><div id="body-model-low" style="display:none"><div class="table-wrap"><table><thead><tr><th>學生識別碼</th><th>系所名稱</th><th>入學學年</th><th>學籍</th><th>風險等級</th><th>預測機率</th></tr></thead><tbody id="rows-model-low"></tbody></table></div></div></div>
+      <div class="risk-section"><div class="risk-header" onclick="toggleMod('model-high')"><div class="risk-header-left"><span class="risk-badge badge-red">🔴 高風險（>80%）</span><span class="risk-count" id="lbl-model-high">0 人</span></div><span class="chevron open" id="chev-model-high">▼</span></div><div id="body-model-high"><div class="table-wrap"><table><thead><tr><th>學生識別碼</th><th>系所名稱</th><th>入學學年</th><th>學籍</th><th>風險等級</th><th>預測機率</th></tr></thead><tbody id="rows-model-high"></tbody></table></div></div></div>
+      <div class="risk-section"><div class="risk-header" onclick="toggleMod('model-mid')"><div class="risk-header-left"><span class="risk-badge badge-amber">🟡 中風險（>50%～80%）</span><span class="risk-count" id="lbl-model-mid">0 人</span></div><span class="chevron" id="chev-model-mid">▼</span></div><div id="body-model-mid" style="display:none"><div class="table-wrap"><table><thead><tr><th>學生識別碼</th><th>系所名稱</th><th>入學學年</th><th>學籍</th><th>風險等級</th><th>預測機率</th></tr></thead><tbody id="rows-model-mid"></tbody></table></div></div></div>
+      <div class="risk-section"><div class="risk-header" onclick="toggleMod('model-low')"><div class="risk-header-left"><span class="risk-badge badge-green">🟢 低風險（≤50%）</span><span class="risk-count" id="lbl-model-low">0 人</span></div><span class="chevron" id="chev-model-low">▼</span></div><div id="body-model-low" style="display:none"><div class="table-wrap"><table><thead><tr><th>學生識別碼</th><th>系所名稱</th><th>入學學年</th><th>學籍</th><th>風險等級</th><th>預測機率</th></tr></thead><tbody id="rows-model-low"></tbody></table></div></div></div>
       <div class="action-bar"><button class="dl-btn" onclick="downloadModel()">⬇ 下載預測結果</button></div>
     </div>
   </div>
