@@ -382,7 +382,7 @@ async function processModelFile(file){
     for(let i=0;i<enc.length;i+=bs){
       const batch=enc.slice(i,i+bs);
       const flat=new Float32Array(batch.map(r=>buildFeatures(r,h)).flat());
-      const tensor=new ort.Tensor('float',flat,[batch.length,32]);
+      const tensor=new ort.Tensor('float32',flat,[batch.length,32]);
       const out=await onnxSess.run({'float_input':tensor});
       const preds=out['output_label']?.data||out[Object.keys(out)[0]]?.data||[];
       const probs=out['output_probability']?.data||[];
