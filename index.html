@@ -162,7 +162,7 @@ tbody tr.data-row.expanded td{background:var(--blue-light)}
 
   <!-- 分頁二：AI 模型預測 -->
   <div id="tab-model" class="tab-content">
-    <div class="model-info">AI 模型說明：本系統使用 XGBoost 機器學習模型（準確率 76.2%，5折交叉驗證 75.9%），以缺曠率、出缺席行為、入學背景等 32 個特徵，預測學生最終學習成效落於班級後 50% 的機率，並依機率高低分為高風險（>80%）、中風險（>50%～80%）、低風險（≤50%）三個等級。所有計算在您的電腦本機進行，資料不會上傳至任何伺服器。</div>
+    <div class="model-info">AI 模型說明：本系統使用 XGBoost 機器學習模型（準確率 75.6%，5折交叉驗證 75.9%），以缺曠率、出缺席行為、入學背景等 32 個特徵，預測學生最終學習成效落於班級後 50% 的機率，並依機率高低分為高風險（>80%）、中風險（>50%～80%）、低風險（≤50%）三個等級。所有計算在您的電腦本機進行，資料不會上傳至任何伺服器。</div>
     <div class="upload-card">
       <div class="upload-zone" id="upload-zone-model">
         <div class="upload-icon">🤖</div>
@@ -233,7 +233,7 @@ function nv(row,col){const v=row[col];if(v===undefined||v===null||v==='')return 
 function bv(row,col){const v=row[col];if(v===null||v===undefined)return false;if(typeof v==='boolean')return v;if(typeof v==='string')return v.toLowerCase()==='true';return!!v;}
 function lastStatus(row,h){const c=getCols(h,'學籍狀況');for(let j=c.length-1;j>=0;j--){const v=row[c[j]];if(v&&v!=='nan')return v;}return '';}
 function rl(n){return n===3?'高風險':n===2?'中風險':'低風險';}
-function getProbRisk(prob){if(prob>0.8)return{level:'高風險',barColor:'#ef4444',tag:'tag-red'};if(prob>0.5)return{level:'中風險',barColor:'#f59e0b',tag:'tag-amber'};return{level:'低風險',barColor:'#22c55e',tag:'tag-green'};}
+function getProbRisk(prob){if(prob>=0.8)return{level:'高風險',barColor:'#ef4444',tag:'tag-red'};if(prob>=0.5)return{level:'中風險',barColor:'#f59e0b',tag:'tag-amber'};return{level:'低風險',barColor:'#22c55e',tag:'tag-green'};}
 
 function calcRisk(row,h){
   const 平均c=getCols(h,'平均'),百分比c=getCols(h,'班級百分比'),曠課c=getCols(h,'曠課','缺曠課總數'),缺曠c=getCols(h,'缺曠課總數'),請假c=getCols(h,'請假總數'),遲到c=getCols(h,'遲到'),早退c=getCols(h,'早退'),嘉獎c=getCols(h,'嘉獎數'),小功c=getCols(h,'小功數'),大功c=getCols(h,'大功數'),申誡c=getCols(h,'申誡數'),小過c=getCols(h,'小過數'),大過c=getCols(h,'大過數'),急難c=getCols(h,'急難救助');
