@@ -204,9 +204,9 @@ tbody tr.data-row.expanded td{background:var(--blue-light)}
       </div>
       <div class="charts-grid">
         <div class="chart-card"><div class="chart-card-title">📊 預測機率分布</div><div class="chart-container"><canvas id="chart-prob"></canvas></div></div>
-        <div class="chart-card"><div class="chart-card-title">🏫 各系所高風險比例（前10名）</div><div class="chart-container"><canvas id="chart-dept"></canvas></div></div>
+        <div class="chart-card"><div class="chart-card-title">🏫 各系所高風險比例（僅供參考）</div><div class="chart-container"><canvas id="chart-dept"></canvas></div></div>
         <div class="chart-card"><div class="chart-card-title">📈 各入學學年高風險比例</div><div class="chart-container"><canvas id="chart-year"></canvas></div></div>
-        <div class="chart-card"><div class="chart-card-title">🔍 特徵重要性（前10名）</div><div class="chart-container"><canvas id="chart-feat"></canvas></div></div>
+        <div class="chart-card"><div class="chart-card-title">🔍 特徵重要性（前10名，基於訓練資料）</div><div class="chart-container"><canvas id="chart-feat"></canvas></div></div>
       </div>
       <div class="risk-section"><div class="risk-header" onclick="toggleMod('model-high')"><div class="risk-header-left"><span class="risk-badge badge-red">🔴 高風險（>80%）</span><span class="risk-count" id="lbl-model-high">0 人</span></div><span class="chevron open" id="chev-model-high">▼</span></div><div id="body-model-high"><div class="table-wrap"><table><thead><tr><th>學生識別碼</th><th>系所名稱</th><th>入學學年</th><th>學籍</th><th>風險等級</th><th>預測機率</th></tr></thead><tbody id="rows-model-high"></tbody></table></div></div></div>
       <div class="risk-section"><div class="risk-header" onclick="toggleMod('model-mid')"><div class="risk-header-left"><span class="risk-badge badge-amber">🟡 中風險（>50%～80%）</span><span class="risk-count" id="lbl-model-mid">0 人</span></div><span class="chevron" id="chev-model-mid">▼</span></div><div id="body-model-mid" style="display:none"><div class="table-wrap"><table><thead><tr><th>學生識別碼</th><th>系所名稱</th><th>入學學年</th><th>學籍</th><th>風險等級</th><th>預測機率</th></tr></thead><tbody id="rows-model-mid"></tbody></table></div></div></div>
@@ -397,7 +397,8 @@ function renderProbChart(data){
 function renderDeptChart(data){
   if(charts.dept){charts.dept.destroy();charts.dept=null;}
   const dm={};data.forEach(d=>{if(!d.系所名稱)return;if(!dm[d.系所名稱])dm[d.系所名稱]={t:0,h:0};dm[d.系所名稱].t++;if(d.風險等級==='高風險')dm[d.系所名稱].h++;});
-  const sorted=Object.entries(dm).map(([k,v])=>({name:k,rate:v.t>0?v.h/v.t:0})).sort((a,b)=>b.rate-a.rate).slice(0,10);
+  const sorted=Object.entries(dm).map(([k,v])=>({name:k,rate:v.t>0?v.h/v.t:0})).sort((a,b)=>b.rate-a.rate);
+  document.getElementById('chart-dept').parentElement.style.height=(sorted.length*28+40)+'px';
   charts.dept=new Chart(document.getElementById('chart-dept'),{type:'bar',data:{labels:sorted.map(d=>d.name.length>8?d.name.slice(0,8)+'…':d.name),datasets:[{data:sorted.map(d=>Math.round(d.rate*100)),backgroundColor:'rgba(192,33,33,0.7)',borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,max:100,ticks:{callback:v=>v+'%',font:{size:11}}},y:{ticks:{font:{size:10}}}}}});
 }
 
