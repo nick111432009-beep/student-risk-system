@@ -140,7 +140,17 @@ tbody tr.data-row.expanded td{background:var(--blue-light)}
       </div>
       <div class="progress-wrap" id="progress-wrap-risk"><div class="progress-bar"><div class="progress-fill" id="progress-fill-risk"></div></div><div class="progress-text" id="progress-text-risk">處理中...</div></div>
     </div>
-    <div class="filter-card" id="filter-card-risk">
+</div> <!-- upload-card 結束 -->
+
+<!-- ⭐ 風險評估說明 -->
+<div class="model-info" style="margin:16px 0; padding:12px 16px; background:#eef4ff; border-left:4px solid #3b82f6; border-radius:8px; line-height:1.6;">
+  <b>📘 風險評估指標說明：</b><br>
+  本系統依據學生之成績、出缺席、獎懲及經濟補助四大面向進行評估，
+  各面向依風險程度給予1～3分，並加總形成整體風險總分。<br>
+  🔴 高風險：9～12分 ｜ 🟡 中風險：5～8分 ｜ 🟢 低風險：4分<br>
+  本結果僅供學務輔導參考，實際仍需結合人工判斷。
+</div>
+<div class="filter-card" id="filter-card-risk">
       <div class="filter-section">
         <div class="filter-label">入學學年篩選（可多選）</div>
         <div class="year-btns" id="year-btns-risk"><button class="year-btn ctrl" id="btn-all-risk">全選</button><button class="year-btn ctrl" id="btn-clear-risk">清除</button></div>
