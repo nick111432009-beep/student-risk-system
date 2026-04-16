@@ -219,8 +219,8 @@ tbody tr.data-row.expanded td{background:var(--blue-light)}
         <div class="chart-card"><div class="chart-card-title">📈 各入學學年學習成效低比例</div><div class="chart-container"><canvas id="chart-year"></canvas></div></div>
         <div class="chart-card"><div class="chart-card-title">🔍 特徵重要性（前10名）</div><div class="chart-container"><canvas id="chart-feat"></canvas></div></div>
       </div>
-      <div class="risk-section"><div class="risk-header" onclick="toggleMod('low-pred')"><div class="risk-header-left"><span class="risk-badge badge-red">學習成效低（後50%）</span><span class="risk-count" id="lbl-pred-low">0 人</span></div><span class="chevron open" id="chev-pred-low">▼</span></div><div id="body-low-pred"><div class="table-wrap"><table><thead><tr><th>學生識別碼</th><th>系所名稱</th><th>入學學年</th><th>學籍</th><th>預測結果</th><th>預測機率</th></tr></thead><tbody id="rows-pred-low"></tbody></table></div></div></div>
-      <div class="risk-section"><div class="risk-header" onclick="toggleMod('high-pred')"><div class="risk-header-left"><span class="risk-badge badge-green">學習成效高（前50%）</span><span class="risk-count" id="lbl-pred-high">0 人</span></div><span class="chevron" id="chev-pred-high">▼</span></div><div id="body-high-pred" style="display:none"><div class="table-wrap"><table><thead><tr><th>學生識別碼</th><th>系所名稱</th><th>入學學年</th><th>學籍</th><th>預測結果</th><th>預測機率</th></tr></thead><tbody id="rows-pred-high"></tbody></table></div></div></div>
+      <div class="risk-section"><div class="risk-header" onclick="toggleMod('low-pred')"><div class="risk-header-left"><span class="risk-badge badge-red">學習成效低（後50%）</span><span class="risk-count" id="lbl-pred-low">0 人</span></div><span class="chevron open" id="chev-pred-low">▼</span></div><div id="body-low-pred"><div class="table-wrap"><table><thead><tr><th>學生識別碼</th><th>系所名稱</th><th>入學學年</th><th>學籍</th><th>預測結果</th><th>風險等級</th><th>預測機率</th></tr></thead><tbody id="rows-pred-low"></tbody></table></div></div></div>
+      <div class="risk-section"><div class="risk-header" onclick="toggleMod('high-pred')"><div class="risk-header-left"><span class="risk-badge badge-green">學習成效高（前50%）</span><span class="risk-count" id="lbl-pred-high">0 人</span></div><span class="chevron" id="chev-pred-high">▼</span></div><div id="body-high-pred" style="display:none"><div class="table-wrap"><table><thead><tr><th>學生識別碼</th><th>系所名稱</th><th>入學學年</th><th>學籍</th><th>預測結果</th><th>風險等級</th><th>預測機率</th></tr></thead><tbody id="rows-pred-high"></tbody></table></div></div></div>
       <div class="action-bar"><button class="dl-btn" onclick="downloadModel()">⬇ 下載預測結果</button></div>
     </div>
   </div>
@@ -440,14 +440,30 @@ async function processModelFile(file){
         const pred = Number(preds[j]) || 0;
         const prob = Math.max(0, Math.min(1, Number(probClass1[j]) || 0));
 
-        results.push({
-          學生識別碼: r['學生識別碼'] || '',
-          系所名稱: r['系所名稱'] || '',
-          入學學年: r['入學學年'] || '',
-          最終學籍狀況: lastStatus(r, h),
-          預測結果: pred,
-          預測標籤: pred === 1 ? '學習成效低（後50%）' : '學習成效高（前50%）',
-          預測機率: prob
+        let 風險等級 = '';
+        let 風險顯示 = '';
+
+        if (prob >= 0.8) {
+          風險等級 = '高風險';
+          風險顯示 = '🔴 高風險';
+        } else if (prob >= 0.5) {
+          風險等級 = '中風險';
+          風險顯示 = '🟡 中風險';
+        } else {
+          風險等級 = '低風險';
+          風險顯示 = '🟢 低風險';
+        }
+
+    results.push({
+            學生識別碼: r['學生識別碼'] || '',
+            系所名稱: r['系所名稱'] || '',
+            入學學年: r['入學學年'] || '',
+            最終學籍狀況: lastStatus(r, h),
+            預測結果: pred,
+            預測標籤: pred === 1 ? '學習成效低（後50%）' : '學習成效高（前50%）',
+            預測機率: prob,
+            風險等級: 風險等級,
+            風險顯示: 風險顯示
         });
       });
 
@@ -552,11 +568,40 @@ function renderRisk(id,data){
 }
 
 function renderModel(id,data){
-  const tb=document.getElementById(id);tb.innerHTML='';
-  data.forEach(d=>{
-    const tr=document.createElement('tr');tr.className='data-row';
-    const p=Math.round(d.預測機率*100),isL=d.預測結果===1;
-    tr.innerHTML=`<td>${d.學生識別碼}</td><td>${d.系所名稱}</td><td>${d.入學學年}</td><td>${stg(d.最終學籍狀況)}</td><td>${isL?'<span class="tag tag-red">學習成效低</span>':'<span class="tag tag-green">學習成效高</span>'}</td><td><div style="font-size:12px;margin-bottom:4px">${p}%</div><div class="prob-bar"><div class="${isL?'prob-fill-high':'prob-fill-low'}" style="width:${p}%"></div></div></td>`;
+  const tb = document.getElementById(id);
+  tb.innerHTML = '';
+
+  data.forEach(d => {
+    const tr = document.createElement('tr');
+    tr.className = 'data-row';
+
+    const p = Math.round(d.預測機率 * 100);
+    const isL = d.預測結果 === 1;
+
+    let riskTag = '';
+    if (d.風險等級 === '高風險') {
+      riskTag = '<span class="tag tag-red">高風險</span>';
+    } else if (d.風險等級 === '中風險') {
+      riskTag = '<span class="tag tag-amber">中風險</span>';
+    } else {
+      riskTag = '<span class="tag tag-green">低風險</span>';
+    }
+
+    tr.innerHTML = `
+      <td>${d.學生識別碼}</td>
+      <td>${d.系所名稱}</td>
+      <td>${d.入學學年}</td>
+      <td>${stg(d.最終學籍狀況)}</td>
+      <td>${isL ? '<span class="tag tag-red">學習成效低</span>' : '<span class="tag tag-green">學習成效高</span>'}</td>
+      <td>${riskTag}</td>
+      <td>
+        <div style="font-size:12px;margin-bottom:4px">${p}%</div>
+        <div class="prob-bar">
+          <div class="${isL ? 'prob-fill-high' : 'prob-fill-low'}" style="width:${p}%"></div>
+        </div>
+      </td>
+    `;
+
     tb.appendChild(tr);
   });
 }
@@ -568,7 +613,21 @@ function hideL(){document.getElementById('loading').classList.remove('show');}
 function setP(tp,p,t){document.getElementById(`progress-fill-${tp}`).style.width=p+'%';document.getElementById(`progress-text-${tp}`).textContent=t;document.getElementById('loading-text').textContent=t;document.getElementById(`progress-wrap-${tp}`).style.display='block';}
 
 function downloadRisk(){const f=riskData.filter(d=>riskSelYears.has(String(d.入學學年))&&(riskSelStatus==='all'||d.最終學籍狀況===riskSelStatus));const ws=XLSX.utils.json_to_sheet(f.map(d=>({學生識別碼:d.學生識別碼,系所名稱:d.系所名稱,入學學年:d.入學學年,最終學籍狀況:d.最終學籍狀況,整體風險:d.整體風險,總分:d.總分,成績風險:d.成績風險,出缺席風險:d.出缺席風險,獎懲風險:d.獎懲風險,經濟補助風險:d.經濟風險})));const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'風險名單');XLSX.writeFile(wb,'學生風險評估名單.xlsx');}
-function downloadModel(){const f=modelData.filter(d=>modelSelYears.has(String(d.入學學年)));const ws=XLSX.utils.json_to_sheet(f.map(d=>({學生識別碼:d.學生識別碼,系所名稱:d.系所名稱,入學學年:d.入學學年,最終學籍狀況:d.最終學籍狀況,預測結果:d.預測標籤,預測機率:Math.round(d.預測機率*100)+'%'})));const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'預測結果');XLSX.writeFile(wb,'學習成效預測結果.xlsx');}
+function downloadModel(){
+  const f = modelData.filter(d => modelSelYears.has(String(d.入學學年)));
+  const ws = XLSX.utils.json_to_sheet(f.map(d => ({
+    學生識別碼: d.學生識別碼,
+    系所名稱: d.系所名稱,
+    入學學年: d.入學學年,
+    最終學籍狀況: d.最終學籍狀況,
+    預測結果: d.預測標籤,
+    風險等級: d.風險等級,
+    預測機率: Math.round(d.預測機率 * 100) + '%'
+  })));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '預測結果');
+  XLSX.writeFile(wb, '學習成效預測結果.xlsx');
+}
 
 document.getElementById('file-input-risk').addEventListener('change',e=>{if(e.target.files[0])processRiskFile(e.target.files[0]);});
 document.getElementById('file-input-model').addEventListener('change',e=>{if(e.target.files[0])processModelFile(e.target.files[0]);});
