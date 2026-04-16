@@ -463,7 +463,15 @@ async function processModelFile(file){
           風險等級 = '低風險';
           風險顯示 = '🟢 低風險';
         }
+        let barColor = '';
 
+        if (風險等級 === '高風險') {
+            barColor = '#ef4444';
+        } else if (風險等級 === '中風險') {
+            barColor = '#f59e0b';
+        } else {
+            barColor = '#22c55e';
+        }
     results.push({
             學生識別碼: r['學生識別碼'] || '',
             系所名稱: r['系所名稱'] || '',
@@ -474,6 +482,7 @@ async function processModelFile(file){
             預測機率: prob,
             風險等級: 風險等級,
             風險顯示: 風險顯示
+            barColor: barColor
         });
       });
 
@@ -631,7 +640,7 @@ function renderModel(id,data){
       <td>
         <div style="font-size:12px;margin-bottom:4px">${p}%</div>
         <div class="prob-bar">
-          <div class="${isL ? 'prob-fill-high' : 'prob-fill-low'}" style="width:${p}%"></div>
+          <div style="width:${p}%; height:100%; background:${d.barColor}; border-radius:4px;"></div>
         </div>
       </td>
     `;
