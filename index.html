@@ -240,7 +240,7 @@ function calcRisk(row,h){
   const tr={成績:[],出缺席:[],獎懲:[],經濟:[]};
   let sr=1;
   平均c.forEach((col,j)=>{const s=nv(row,col);if(s===null)return;if(s<PARAMS.成績_高風險門檻){sr=Math.max(sr,3);tr.成績.push(`${col}：${s.toFixed(1)}分`);}else if(s<PARAMS.成績_中風險門檻){sr=Math.max(sr,2);}if(j>0){const p=nv(row,平均c[j-1]);if(p!==null){const d=p-s;if(d>PARAMS.成績_落差_高風險){sr=Math.max(sr,3);tr.成績.push(`落差${d.toFixed(1)}分`);}else if(d>PARAMS.成績_落差_中風險){sr=Math.max(sr,2);}}}});
-  百分比c.forEach(col=>{const p=nv(row,col);if(p===null)return;if(p>PARAMS.百分比_高風險門檻){sr=Math.max(sr,3);tr.成績.push(`後${(100-p).toFixed(0)}%`);}else if(p>PARAMS.百分比_中風險門檻){sr=Math.max(sr,2);}});
+  百分比c.forEach(col=>{const p=nv(row,col);if(p===null)return;if(p>PARAMS.百分比_高風險門檻){sr=Math.max(sr,3);tr.成績.push(`後${(100-p).toFixed(1)}%`);}else if(p>PARAMS.百分比_中風險門檻){sr=Math.max(sr,2);}});
   let ar=1;
   曠課c.forEach(col=>{const v=nv(row,col);if(v===null)return;if(v>=PARAMS.曠課_高風險門檻){ar=Math.max(ar,3);tr.出缺席.push(`${col}：${v}次`);}else if(v>=PARAMS.曠課_中風險門檻){ar=Math.max(ar,2);}});
   缺曠c.forEach(col=>{const v=nv(row,col);if(v===null)return;if(v>=PARAMS.缺曠_高風險門檻){ar=Math.max(ar,3);}else if(v>=PARAMS.缺曠_中風險門檻){ar=Math.max(ar,2);}});
@@ -378,7 +378,7 @@ function renderRisk(id,data){
 function renderModelRows(id,data){
   const tb=document.getElementById(id);tb.innerHTML='';
   data.forEach(d=>{
-    const tr=document.createElement('tr');tr.className='data-row';const p=Math.round(d.預測機率*100);
+    const tr=document.createElement('tr');tr.className='data-row';const p=(d.預測機率*100).toFixed(1);
     tr.innerHTML=`<td>${d.學生識別碼}</td><td>${d.系所名稱}</td><td>${d.入學學年}</td><td>${stg(d.最終學籍狀況)}</td><td><span class="tag ${d.tag}">${d.風險等級}</span></td><td><div style="font-size:12px;margin-bottom:4px;font-weight:600;color:${d.barColor}">${p}%</div><div class="prob-bar"><div class="prob-fill" style="width:${p}%;background:${d.barColor}"></div></div></td>`;
     tb.appendChild(tr);
   });
@@ -427,7 +427,7 @@ function downloadRisk(){
 }
 function downloadModel(){
   const f=modelData.filter(d=>modelSelYears.has(String(d.入學學年)));
-  const ws=XLSX.utils.json_to_sheet(f.map(d=>({學生識別碼:d.學生識別碼,系所名稱:d.系所名稱,入學學年:d.入學學年,最終學籍狀況:d.最終學籍狀況,風險等級:d.風險等級,預測機率:Math.round(d.預測機率*100)+'%'})));
+  const ws=XLSX.utils.json_to_sheet(f.map(d=>({學生識別碼:d.學生識別碼,系所名稱:d.系所名稱,入學學年:d.入學學年,最終學籍狀況:d.最終學籍狀況,風險等級:d.風險等級,預測機率:(d.預測機率*100).toFixed(1)+'%'})));
   const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'預測結果');XLSX.writeFile(wb,'學習成效預測結果.xlsx');
 }
 
