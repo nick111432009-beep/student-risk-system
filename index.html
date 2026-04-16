@@ -1458,7 +1458,7 @@ function buildYF(type, data, selSet){
       }else{
         updModel();
       }
-    };
+    }
   }
 
   if(btnClear){
@@ -1472,6 +1472,13 @@ function buildYF(type, data, selSet){
       }
     };
   }
+}
+function updRisk(){
+  console.log('risk update trigger');
+}
+
+function updModel(){
+  console.log('model update trigger');
 }
 async function processModelFile(file){
   showL('讀取 Excel 中...');
