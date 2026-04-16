@@ -430,8 +430,8 @@ async function processModelFile(file){
 
       // 取得輸出
       const outputNames = Object.keys(out);
-      const labelOutput = out['output_label'] || out[outputNames[0]];
-      const probOutput  = out['output_probability'] || out[outputNames[1]];
+      const labelOutput = out['Label'] || out['output_label'] || out[outputNames[0]];
+      const probOutput = out['probabilities'] || out['output_probability'] || out[outputNames[1]];
 
       const preds = labelOutput?.data ? Array.from(labelOutput.data).map(v => Number(v)) : Array(batch.length).fill(0);
       const probClass1 = extractProbabilities(probOutput, batch.length);
