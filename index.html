@@ -45,13 +45,19 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 .divider{height:0.5px;background:var(--border);margin:10px 0}
 .empty-state{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:60px 24px;text-align:center}
 .empty-state-icon{font-size:40px;margin-bottom:16px}.empty-state-title{font-size:16px;font-weight:500;margin-bottom:8px}.empty-state-text{font-size:13px;color:var(--text-secondary)}
-.metrics-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
 .metric-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 20px}
 .metric-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;display:flex;align-items:center;gap:6px}
 .metric-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .dot-red{background:#E02424}.dot-amber{background:#D97706}.dot-green{background:#057A55}
 .metric-num{font-size:32px;font-weight:700;line-height:1}.metric-sub{font-size:12px;color:var(--text-secondary);margin-top:4px}
 .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.summary-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 20px;margin-bottom:16px}
+.summary-title{font-size:12px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:12px}
+.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.summary-item{text-align:center;padding:10px;background:var(--bg);border-radius:var(--radius)}
+.summary-item-num{font-size:22px;font-weight:700}
+.summary-item-lbl{font-size:11px;color:var(--text-secondary);margin-top:2px}
 .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px}
 .chart-card-title{font-size:13px;font-weight:700;margin-bottom:16px}.chart-container{position:relative;height:240px}
 .risk-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:10px;overflow:hidden}
@@ -148,6 +154,15 @@ tbody tr.data-row.expanded td{background:var(--blue-light)}
     <div class="empty-state" id="empty-state-risk"><div class="empty-state-icon">📋</div><div class="empty-state-title">請先上傳 Excel 資料檔案</div><div class="empty-state-text">上傳後請選擇入學學年，系統將自動顯示風險評估結果</div></div>
     <div class="empty-state" id="select-year-risk" style="display:none"><div class="empty-state-icon">🗓️</div><div class="empty-state-title">請選擇入學學年</div><div class="empty-state-text">從上方篩選器選擇一個或多個學年</div></div>
     <div id="result-risk" style="display:none">
+      <div class="summary-card" id="summary-risk">
+        <div class="summary-title">📊 各面向觸發統計</div>
+        <div class="summary-grid">
+          <div class="summary-item"><div class="summary-item-num" id="sum-score" style="color:var(--red)">0</div><div class="summary-item-lbl">成績觸發人數</div></div>
+          <div class="summary-item"><div class="summary-item-num" id="sum-attend" style="color:var(--amber)">0</div><div class="summary-item-lbl">出缺席觸發人數</div></div>
+          <div class="summary-item"><div class="summary-item-num" id="sum-reward" style="color:#6B21A8">0</div><div class="summary-item-lbl">獎懲觸發人數</div></div>
+          <div class="summary-item"><div class="summary-item-num" id="sum-econ" style="color:#0369A1">0</div><div class="summary-item-lbl">經濟補助觸發人數</div></div>
+        </div>
+      </div>
       <div class="metrics-grid">
         <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-red"></span>高風險</div><div class="metric-num" id="cnt-high">0</div><div class="metric-sub">人</div></div>
         <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-amber"></span>中風險</div><div class="metric-num" id="cnt-mid">0</div><div class="metric-sub">人</div></div>
@@ -201,6 +216,7 @@ tbody tr.data-row.expanded td{background:var(--blue-light)}
         <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-red"></span>高風險（>80%）</div><div class="metric-num" id="cnt-model-high">0</div><div class="metric-sub">人</div></div>
         <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-amber"></span>中風險（>50%～80%）</div><div class="metric-num" id="cnt-model-mid">0</div><div class="metric-sub">人</div></div>
         <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-green"></span>低風險（≤50%）</div><div class="metric-num" id="cnt-model-low">0</div><div class="metric-sub">人</div></div>
+        <div class="metric-card"><div class="metric-label"><span class="metric-dot" style="background:#6B7280"></span>總計</div><div class="metric-num" id="cnt-model-total">0</div><div class="metric-sub">人</div></div>
       </div>
       <div class="charts-grid">
         <div class="chart-card"><div class="chart-card-title">📊 預測機率分布</div><div class="chart-container"><canvas id="chart-prob"></canvas></div></div>
@@ -341,6 +357,11 @@ function updRisk(){
   const mi=f.filter(d=>d.整體風險==='中風險').sort((a,b)=>b.總分-a.總分);
   const lo=f.filter(d=>d.整體風險==='低風險').sort((a,b)=>b.總分-a.總分);
   ['high','mid','low'].forEach((k,i)=>{const arr=[hi,mi,lo][i];document.getElementById(`cnt-${k}`).textContent=arr.length;document.getElementById(`lbl-${k}`).textContent=arr.length+' 人';});
+  // 各面向觸發統計
+  document.getElementById('sum-score').textContent=f.filter(d=>d.triggers.成績.length>0).length;
+  document.getElementById('sum-attend').textContent=f.filter(d=>d.triggers.出缺席.length>0).length;
+  document.getElementById('sum-reward').textContent=f.filter(d=>d.triggers.獎懲.length>0).length;
+  document.getElementById('sum-econ').textContent=f.filter(d=>d.triggers.經濟.length>0).length;
   renderRisk('rows-high',hi);renderRisk('rows-mid',mi);renderRisk('rows-low',lo);
 }
 
@@ -349,7 +370,7 @@ function updModel(){
   document.getElementById('select-year-model').style.display='none';document.getElementById('result-model').style.display='block';
   const f=modelData.filter(d=>modelSelYears.has(String(d.入學學年)));
   const hi=f.filter(d=>d.風險等級==='高風險'),mi=f.filter(d=>d.風險等級==='中風險'),lo=f.filter(d=>d.風險等級==='低風險');
-  document.getElementById('cnt-model-high').textContent=hi.length;document.getElementById('cnt-model-mid').textContent=mi.length;document.getElementById('cnt-model-low').textContent=lo.length;
+  document.getElementById('cnt-model-high').textContent=hi.length;document.getElementById('cnt-model-mid').textContent=mi.length;document.getElementById('cnt-model-low').textContent=lo.length;document.getElementById('cnt-model-total').textContent=f.length;
   document.getElementById('lbl-model-high').textContent=hi.length+' 人';document.getElementById('lbl-model-mid').textContent=mi.length+' 人';document.getElementById('lbl-model-low').textContent=lo.length+' 人';
   const disp=modelSelPred==='all'?f:modelSelPred==='high'?hi:modelSelPred==='mid'?mi:lo;
   renderModelRows('rows-model-high',modelSelPred==='all'||modelSelPred==='high'?hi:[]);
@@ -393,7 +414,7 @@ function renderProbChart(data){
   const bins=Array(10).fill(0);data.forEach(d=>{const i=Math.min(Math.floor(d.預測機率*10),9);bins[i]++;});
   const labels=['0-10%','10-20%','20-30%','30-40%','40-50%','50-60%','60-70%','70-80%','80-90%','90-100%'];
   const colors=labels.map((_,i)=>i>=8?'rgba(192,33,33,0.8)':i>=5?'rgba(245,158,11,0.8)':'rgba(26,86,219,0.7)');
-  charts.prob=new Chart(document.getElementById('chart-prob'),{type:'bar',data:{labels,datasets:[{data:bins,backgroundColor:colors,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{font:{size:11}}},x:{ticks:{font:{size:10}}}}}});
+  charts.prob=new Chart(document.getElementById('chart-prob'),{type:'bar',data:{labels,datasets:[{data:bins,backgroundColor:colors,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},datalabels:{display:false}},scales:{y:{beginAtZero:true,ticks:{font:{size:11}}},x:{ticks:{font:{size:10}}}}}});
 }
 
 function renderDeptChart(data){
@@ -401,14 +422,14 @@ function renderDeptChart(data){
   const dm={};data.forEach(d=>{if(!d.系所名稱)return;if(!dm[d.系所名稱])dm[d.系所名稱]={t:0,h:0};dm[d.系所名稱].t++;if(d.風險等級==='高風險')dm[d.系所名稱].h++;});
   const sorted=Object.entries(dm).map(([k,v])=>({name:k,rate:v.t>0?v.h/v.t:0})).sort((a,b)=>b.rate-a.rate);
   document.getElementById('chart-dept').parentElement.style.height=(sorted.length*28+40)+'px';
-  charts.dept=new Chart(document.getElementById('chart-dept'),{type:'bar',data:{labels:sorted.map(d=>d.name.length>8?d.name.slice(0,8)+'…':d.name),datasets:[{data:sorted.map(d=>Math.round(d.rate*100)),backgroundColor:'rgba(192,33,33,0.7)',borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,max:100,ticks:{callback:v=>v+'%',font:{size:11}}},y:{ticks:{font:{size:10}}}}}});
+  charts.dept=new Chart(document.getElementById('chart-dept'),{type:'bar',data:{labels:sorted.map(d=>d.name),datasets:[{data:sorted.map(d=>Math.round(d.rate*100)),backgroundColor:'rgba(192,33,33,0.7)',borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.parsed.x}%`}}},scales:{x:{beginAtZero:true,max:100,ticks:{callback:v=>v+'%',font:{size:11}}},y:{ticks:{font:{size:10}}}}}});
 }
 
 function renderYearChart(data){
   if(charts.year){charts.year.destroy();charts.year=null;}
   const ym={};data.forEach(d=>{const y=String(d.入學學年);if(!y)return;if(!ym[y])ym[y]={t:0,h:0};ym[y].t++;if(d.風險等級==='高風險')ym[y].h++;});
   const years=Object.keys(ym).sort();const rates=years.map(y=>ym[y].t>0?Math.round(ym[y].h/ym[y].t*100):0);
-  charts.year=new Chart(document.getElementById('chart-year'),{type:'line',data:{labels:years,datasets:[{data:rates,borderColor:'#E02424',backgroundColor:'rgba(192,33,33,0.1)',tension:0.3,fill:true,pointBackgroundColor:'#E02424',pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,max:100,ticks:{callback:v=>v+'%',font:{size:11}}},x:{ticks:{font:{size:11}}}}}});
+  charts.year=new Chart(document.getElementById('chart-year'),{type:'line',data:{labels:years,datasets:[{data:rates,borderColor:'#E02424',backgroundColor:'rgba(192,33,33,0.1)',tension:0.3,fill:true,pointBackgroundColor:'#E02424',pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`高風險比例：${ctx.parsed.y}%`}}},scales:{y:{beginAtZero:true,max:100,ticks:{callback:v=>v+'%',font:{size:11}}},x:{ticks:{font:{size:11}}}}}});
 }
 
 function renderFeatChart(){
