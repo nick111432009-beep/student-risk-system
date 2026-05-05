@@ -10,7 +10,7 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#F5F5F0;--surface:#FFFFFF;--border:#E5E5E0;--text-primary:#1A1A1A;--text-secondary:#6B6B6B;--text-muted:#9B9B9B;--blue:#1A56DB;--blue-light:#EBF0FF;--red:#C81E1E;--red-light:#FDF2F2;--amber:#92400E;--amber-light:#FFFBEB;--green:#03543F;--green-light:#F0FDF4;--radius:8px;--radius-lg:12px;}
+:root{--bg:#F5F5F0;--surface:#FFFFFF;--border:#E5E5E0;--text-primary:#1A1A1A;--text-secondary:#6B6B6B;--text-muted:#9B9B9B;--blue:#1A56DB;--blue-light:#EBF0FF;--red:#C81E1E;--red-light:#FDF2F2;--amber:#92400E;--amber-light:#FFFBEB;--green:#03543F;--green-light:#F0FDF4;--purple:#6B21A8;--purple-light:#F5F3FF;--radius:8px;--radius-lg:12px;}
 body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text-primary);min-height:100vh;font-size:14px;line-height:1.6}
 .app-header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
 .app-title{font-size:16px;font-weight:700}.app-subtitle{font-size:12px;color:var(--text-secondary);margin-top:2px}
@@ -26,7 +26,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 .upload-zone:hover,.upload-zone.dragover{border-color:var(--blue);background:var(--blue-light)}
 .upload-icon{font-size:32px;margin-bottom:8px}.upload-text{font-size:14px;font-weight:500;margin-bottom:4px}.upload-hint{font-size:12px;color:var(--text-secondary)}
 .upload-btn{display:inline-block;margin-top:12px;padding:8px 20px;background:var(--blue);color:white;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;border:none;font-family:'Noto Sans TC',sans-serif}
-#file-input-risk,#file-input-model{display:none}
+#file-input-risk,#file-input-model,#file-input-dropout{display:none}
 .file-loaded{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--green-light);border:1px solid #86EFAC;border-radius:var(--radius)}
 .file-loaded-name{font-size:13px;font-weight:500;color:var(--green)}.file-loaded-info{font-size:12px;color:var(--text-secondary)}
 .reset-btn{margin-left:auto;padding:6px 14px;background:white;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;color:var(--text-secondary);white-space:nowrap;transition:all 0.15s}
@@ -90,6 +90,7 @@ tbody tr.data-row.expanded td{background:var(--blue-light)}
 .bar{width:100%;border-radius:2px 2px 0 0}.bar-lbl{font-size:10px;color:var(--text-muted)}
 .chart-divider{height:1px;background:var(--border);margin:14px 0}
 .model-info{background:var(--blue-light);border:1px solid #BFDBFE;border-radius:var(--radius);padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--blue)}
+.model-info-dropout{background:#FEF2F2;border:1px solid #FECACA;border-radius:var(--radius);padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--red)}
 .risk-info{background:#eef4ff;border-left:4px solid #3b82f6;border-radius:var(--radius);padding:14px 16px;margin-bottom:16px;font-size:13px;color:var(--text-primary);line-height:1.8}
 .prob-bar{height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin-top:4px}
 .prob-fill{height:100%;border-radius:4px}
@@ -114,6 +115,7 @@ tbody tr.data-row.expanded td{background:var(--blue-light)}
   <div class="tabs">
     <button class="tab-btn active" onclick="switchTab('risk')">風險評估（規則式）</button>
     <button class="tab-btn" onclick="switchTab('model')">學習成效預測（AI 模型）</button>
+    <button class="tab-btn" onclick="switchTab('dropout')">休退學預警（AI 模型）</button>
   </div>
 
   <!-- 分頁一：風險評估 -->
@@ -180,9 +182,9 @@ tbody tr.data-row.expanded td{background:var(--blue-light)}
     </div>
   </div>
 
-  <!-- 分頁二：AI 模型預測 -->
+  <!-- 分頁二：學習成效預測 -->
   <div id="tab-model" class="tab-content">
-    <div class="model-info">AI 模型說明：本系統使用 XGBoost 機器學習模型（準確率 75.6%，5折交叉驗證 75.9%），以缺曠率、出缺席行為、入學背景等 32 個特徵，預測學生最終學習成效落於班級後 50% 的機率，並依機率高低分為高風險（>80%）、中風險（>50%～80%）、低風險（≤50%）三個等級。所有計算在您的電腦本機進行，資料不會上傳至任何伺服器。</div>
+    <div class="model-info">🤖 <b>學習成效預測模型</b>：使用 XGBoost（5 折交叉驗證 ROC-AUC <b>84.7%</b>，Hold-out ROC-AUC 85.4%、F1 78.0%），以 <b>49 個特徵</b>（包含完整 8 學期出缺席、獎懲、補助等）預測學生最終學習成效落於班級後 50%（含休退學者）的機率，作為 <b>教務處課業輔導</b> 之依據。所有計算在您的電腦本機進行，資料不會上傳至任何伺服器。</div>
     <div class="upload-card">
       <div class="upload-zone" id="upload-zone-model">
         <div class="upload-icon">🤖</div>
@@ -235,29 +237,89 @@ tbody tr.data-row.expanded td{background:var(--blue-light)}
       <div class="action-bar"><button class="dl-btn" onclick="downloadModel()">⬇ 下載預測結果</button></div>
     </div>
   </div>
+
+  <!-- 分頁三：休退學預警 -->
+  <div id="tab-dropout" class="tab-content">
+    <div class="model-info-dropout">⚠️ <b>休退學風險預警模型</b>：使用 XGBoost（5 折交叉驗證 ROC-AUC <b>77.7%</b>、Recall 56.5%；資料中休退學佔 10.7%，已採用 <code>scale_pos_weight</code> 處理類別不平衡）。本模型 <b>僅使用前 2 學期的出缺席、獎懲、補助等 30 個特徵</b>，預測學生未來休學或退學的機率，提供 <b>學務處於 S2 結束前進行早期介入</b>。所有計算在您的電腦本機進行，資料不會上傳至任何伺服器。</div>
+    <div class="upload-card">
+      <div class="upload-zone" id="upload-zone-dropout">
+        <div class="upload-icon">⚠️</div>
+        <div class="upload-text">拖曳 Excel 檔案至此，或點擊選擇檔案</div>
+        <div class="upload-hint">支援 .xlsx 格式，資料在您的電腦本機處理，不會上傳至任何伺服器</div>
+        <button class="upload-btn" onclick="document.getElementById('file-input-dropout').click()">選擇檔案</button>
+        <input type="file" id="file-input-dropout" accept=".xlsx,.xls">
+      </div>
+      <div id="file-loaded-dropout" style="display:none" class="file-loaded">
+        <div style="font-size:20px">✅</div>
+        <div><div class="file-loaded-name" id="file-name-dropout">—</div><div class="file-loaded-info" id="file-info-dropout">—</div></div>
+        <button class="reset-btn" onclick="resetDropout()">↺ 重新上傳</button>
+      </div>
+      <div class="progress-wrap" id="progress-wrap-dropout"><div class="progress-bar"><div class="progress-fill" id="progress-fill-dropout"></div></div><div class="progress-text" id="progress-text-dropout">處理中...</div></div>
+    </div>
+    <div class="filter-card" id="filter-card-dropout">
+      <div class="filter-section">
+        <div class="filter-label">入學學年篩選（可多選）</div>
+        <div class="year-btns" id="year-btns-dropout"><button class="year-btn ctrl" id="btn-all-dropout">全選</button><button class="year-btn ctrl" id="btn-clear-dropout">清除</button></div>
+      </div>
+      <div class="divider"></div>
+      <div class="filter-section">
+        <div class="filter-label">風險等級篩選</div>
+        <div class="status-btns" id="pred-btns-dropout">
+          <button class="status-btn active" data-pred="all">全部</button>
+          <button class="status-btn" data-pred="high">🔴 高風險（>80%）</button>
+          <button class="status-btn" data-pred="mid">🟡 中風險（>50%～80%）</button>
+          <button class="status-btn" data-pred="low">🟢 低風險（≤50%）</button>
+        </div>
+      </div>
+    </div>
+    <div class="empty-state" id="empty-state-dropout"><div class="empty-state-icon">⚠️</div><div class="empty-state-title">請先上傳 Excel 資料檔案</div><div class="empty-state-text">系統將使用 AI 模型預測每位學生的休退學風險</div></div>
+    <div class="empty-state" id="select-year-dropout" style="display:none"><div class="empty-state-icon">🗓️</div><div class="empty-state-title">請選擇入學學年</div><div class="empty-state-text">從上方篩選器選擇一個或多個學年</div></div>
+    <div id="result-dropout" style="display:none">
+      <div class="metrics-grid">
+        <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-red"></span>高風險（>80%）</div><div class="metric-num" id="cnt-dropout-high">0</div><div class="metric-sub">人</div></div>
+        <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-amber"></span>中風險（>50%～80%）</div><div class="metric-num" id="cnt-dropout-mid">0</div><div class="metric-sub">人</div></div>
+        <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-green"></span>低風險（≤50%）</div><div class="metric-num" id="cnt-dropout-low">0</div><div class="metric-sub">人</div></div>
+        <div class="metric-card"><div class="metric-label"><span class="metric-dot" style="background:#6B7280"></span>總計</div><div class="metric-num" id="cnt-dropout-total">0</div><div class="metric-sub">人</div></div>
+      </div>
+      <div class="charts-grid">
+        <div class="chart-card"><div class="chart-card-title">📊 預測機率分布</div><div class="chart-container"><canvas id="chart-prob-dropout"></canvas></div></div>
+        <div class="chart-card"><div class="chart-card-title">🏫 各系所高風險比例（僅供參考）</div><div class="chart-container"><canvas id="chart-dept-dropout"></canvas></div></div>
+        <div class="chart-card"><div class="chart-card-title">📈 各入學學年高風險比例</div><div class="chart-container"><canvas id="chart-year-dropout"></canvas></div></div>
+        <div class="chart-card"><div class="chart-card-title">🔍 特徵重要性（前10名，基於訓練資料）</div><div class="chart-container"><canvas id="chart-feat-dropout"></canvas></div></div>
+      </div>
+      <div class="risk-section"><div class="risk-header" onclick="toggleDrop('dropout-high')"><div class="risk-header-left"><span class="risk-badge badge-red">🔴 高風險（>80%）</span><span class="risk-count" id="lbl-dropout-high">0 人</span></div><span class="chevron open" id="chev-dropout-high">▼</span></div><div id="body-dropout-high"><div class="table-wrap"><table><thead><tr><th>學生識別碼</th><th>系所名稱</th><th>入學學年</th><th>學籍</th><th>風險等級</th><th>預測機率</th></tr></thead><tbody id="rows-dropout-high"></tbody></table></div></div></div>
+      <div class="risk-section"><div class="risk-header" onclick="toggleDrop('dropout-mid')"><div class="risk-header-left"><span class="risk-badge badge-amber">🟡 中風險（>50%～80%）</span><span class="risk-count" id="lbl-dropout-mid">0 人</span></div><span class="chevron" id="chev-dropout-mid">▼</span></div><div id="body-dropout-mid" style="display:none"><div class="table-wrap"><table><thead><tr><th>學生識別碼</th><th>系所名稱</th><th>入學學年</th><th>學籍</th><th>風險等級</th><th>預測機率</th></tr></thead><tbody id="rows-dropout-mid"></tbody></table></div></div></div>
+      <div class="risk-section"><div class="risk-header" onclick="toggleDrop('dropout-low')"><div class="risk-header-left"><span class="risk-badge badge-green">🟢 低風險（≤50%）</span><span class="risk-count" id="lbl-dropout-low">0 人</span></div><span class="chevron" id="chev-dropout-low">▼</span></div><div id="body-dropout-low" style="display:none"><div class="table-wrap"><table><thead><tr><th>學生識別碼</th><th>系所名稱</th><th>入學學年</th><th>學籍</th><th>風險等級</th><th>預測機率</th></tr></thead><tbody id="rows-dropout-low"></tbody></table></div></div></div>
+      <div class="action-bar"><button class="dl-btn" onclick="downloadDropout()">⬇ 下載預警名單</button></div>
+    </div>
+  </div>
 </div>
 <script>
 const PARAMS={成績_高風險門檻:60,成績_中風險門檻:70,成績_落差_高風險:15,成績_落差_中風險:10,百分比_高風險門檻:75,百分比_中風險門檻:50,曠課_高風險門檻:10,曠課_中風險門檻:5,缺曠_高風險門檻:20,缺曠_中風險門檻:10,請假增加_中風險門檻:10,遲到早退增加_中風險門檻:10,獎懲_高風險門檻:-18,獎懲_中風險門檻:-9,大過學期數_高風險:2,弱勢補助_高風險門檻:3,弱勢補助_中風險門檻:1,整體_高風險門檻:9,整體_中風險門檻:5};
 const 弱勢補助關鍵字=['清寒助學金','低收入戶助學金','教育部弱勢學生生活助學金','餐食助學代金','就學貸款','急難救助'];
-const featImportance=[{name:'缺曠率',value:0.137},{name:'性別',value:0.109},{name:'總曠課',value:0.104},{name:'入學方式',value:0.087},{name:'系所',value:0.082},{name:'總缺曠',value:0.074},{name:'功過淨值',value:0.056},{name:'缺曠_最大',value:0.041},{name:'請假_S4',value:0.033},{name:'後期惡化率',value:0.032}];
-let riskData=[],modelData=[],riskSelYears=new Set(),modelSelYears=new Set(),riskSelStatus='all',modelSelPred='all',onnxSess=null;
+const featImportancePerf=[{name:'缺曠率',value:0.115},{name:'性別',value:0.075},{name:'總曠課',value:0.038},{name:'入學方式',value:0.034},{name:'總缺曠',value:0.032},{name:'系所',value:0.028},{name:'功過淨值',value:0.028},{name:'曠課_最大',value:0.025},{name:'請假_最大',value:0.024},{name:'請假_S8',value:0.022}];
+const featImportanceDrop=[{name:'缺曠率',value:0.063},{name:'功過淨值',value:0.060},{name:'請假_S2',value:0.058},{name:'總缺曠',value:0.046},{name:'入學方式',value:0.041},{name:'總請假',value:0.040},{name:'性別',value:0.039},{name:'總曠課',value:0.038},{name:'曠課_S2',value:0.038},{name:'缺曠_S2',value:0.037}];
+let riskData=[],modelData=[],dropoutData=[];
+let riskSelYears=new Set(),modelSelYears=new Set(),dropoutSelYears=new Set();
+let riskSelStatus='all',modelSelPred='all',dropoutSelPred='all';
+let onnxSessPerf=null,onnxSessDrop=null;
 let charts={prob:null,dept:null,year:null,feat:null};
+let chartsDrop={prob:null,dept:null,year:null,feat:null};
 
 function switchTab(t){
-  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',(i===0&&t==='risk')||(i===1&&t==='model')));
-  document.getElementById('tab-risk').classList.toggle('active',t==='risk');
-  document.getElementById('tab-model').classList.toggle('active',t==='model');
-  // 更新右上角按鈕文字
+  ['risk','model','dropout'].forEach((k,i)=>{
+    document.querySelectorAll('.tab-btn')[i].classList.toggle('active',k===t);
+    document.getElementById('tab-'+k).classList.toggle('active',k===t);
+  });
   const btn=document.getElementById('header-dl-btn');
-  btn.textContent=t==='risk'?'⬇ 下載風險名單':'⬇ 下載預測結果';
-  // 只有有資料時才顯示
-  const hasData=t==='risk'?riskSelYears.size>0&&riskData.length>0:modelSelYears.size>0&&modelData.length>0;
+  btn.textContent=t==='risk'?'⬇ 下載風險名單':t==='model'?'⬇ 下載預測結果':'⬇ 下載預警名單';
+  const hasData=(t==='risk'&&riskSelYears.size>0&&riskData.length>0)||(t==='model'&&modelSelYears.size>0&&modelData.length>0)||(t==='dropout'&&dropoutSelYears.size>0&&dropoutData.length>0);
   btn.style.display=hasData?'block':'none';
 }
 
 function resetRisk(){riskData=[];riskSelYears=new Set();riskSelStatus='all';['file-loaded-risk','filter-card-risk','result-risk','select-year-risk'].forEach(id=>document.getElementById(id).style.display='none');document.getElementById('upload-zone-risk').style.display='';document.getElementById('empty-state-risk').style.display='';document.getElementById('progress-wrap-risk').style.display='none';document.getElementById('progress-fill-risk').style.width='0%';document.getElementById('file-input-risk').value='';document.querySelectorAll('#status-btns-risk .status-btn').forEach(b=>b.classList.toggle('active',b.dataset.status==='all'));document.getElementById('header-dl-btn').style.display='none';}
-
 function resetModel(){modelData=[];modelSelYears=new Set();modelSelPred='all';['file-loaded-model','filter-card-model','result-model','select-year-model'].forEach(id=>document.getElementById(id).style.display='none');document.getElementById('upload-zone-model').style.display='';document.getElementById('empty-state-model').style.display='';document.getElementById('progress-wrap-model').style.display='none';document.getElementById('progress-fill-model').style.width='0%';document.getElementById('file-input-model').value='';document.querySelectorAll('#pred-btns .status-btn').forEach(b=>b.classList.toggle('active',b.dataset.pred==='all'));Object.keys(charts).forEach(k=>{if(charts[k]){charts[k].destroy();charts[k]=null;}});document.getElementById('header-dl-btn').style.display='none';}
+function resetDropout(){dropoutData=[];dropoutSelYears=new Set();dropoutSelPred='all';['file-loaded-dropout','filter-card-dropout','result-dropout','select-year-dropout'].forEach(id=>document.getElementById(id).style.display='none');document.getElementById('upload-zone-dropout').style.display='';document.getElementById('empty-state-dropout').style.display='';document.getElementById('progress-wrap-dropout').style.display='none';document.getElementById('progress-fill-dropout').style.width='0%';document.getElementById('file-input-dropout').value='';document.querySelectorAll('#pred-btns-dropout .status-btn').forEach(b=>b.classList.toggle('active',b.dataset.pred==='all'));Object.keys(chartsDrop).forEach(k=>{if(chartsDrop[k]){chartsDrop[k].destroy();chartsDrop[k]=null;}});document.getElementById('header-dl-btn').style.display='none';}
 
 function getCols(h,kw,ex=''){return h.filter(c=>c&&c.includes(kw)&&(!ex||!c.includes(ex)));}
 function nv(row,col){const v=row[col];if(v===undefined||v===null||v==='')return null;const n=parseFloat(v);return isNaN(n)?null:n;}
@@ -288,18 +350,31 @@ function calcRisk(row,h){
   return{學生識別碼:row['學生識別碼']||'',系所名稱:row['系所名稱']||'',入學學年:row['入學學年']||'',最終學籍狀況:lastStatus(row,h),整體風險:總>=PARAMS.整體_高風險門檻?'高風險':總>=PARAMS.整體_中風險門檻?'中風險':'低風險',總分:總,成績風險:rl(sr),出缺席風險:rl(ar),獎懲風險:rl(dr),經濟風險:rl(er),triggers:tr,成績趨勢:平均c.map(c=>nv(row,c)).filter(v=>v!==null),缺曠趨勢:缺曠c.map(c=>nv(row,c)).filter(v=>v!==null)};
 }
 
-function buildFeatures(row,h){
-  const 曠c=getCols(h,'曠課','缺曠課總數'),缺c=getCols(h,'缺曠課總數'),請c=getCols(h,'請假總數'),嘉c=getCols(h,'嘉獎數'),小fc=getCols(h,'小功數'),大fc=getCols(h,'大功數'),申c=getCols(h,'申誡數'),小oc=getCols(h,'小過數'),大oc=getCols(h,'大過數'),學c=getCols(h,'總修習學分');
-  const sum=c=>c.reduce((a,x)=>a+(nv(row,x)||0),0);const mx=c=>Math.max(...c.map(x=>nv(row,x)||0),0);
-  const fv=c=>{for(const x of c){const v=nv(row,x);if(v!==null)return v;}return 0;};
-  const lv=c=>{for(let i=c.length-1;i>=0;i--){const v=nv(row,c[i]);if(v!==null)return v;}return 0;};
-  const 總曠=sum(曠c),總缺=sum(缺c),總假=sum(請c),學分=sum(學c)||1;
+function _sum(row,c){return c.reduce((a,x)=>a+(nv(row,x)||0),0);}
+function _mx(row,c){return c.length?Math.max(...c.map(x=>nv(row,x)||0),0):0;}
+function _fv(row,c){for(const x of c){const v=nv(row,x);if(v!==null)return v;}return 0;}
+function _lv(row,c){for(let i=c.length-1;i>=0;i--){const v=nv(row,c[i]);if(v!==null)return v;}return 0;}
+function _s(row,c,i){return i<c.length?(nv(row,c[i])||0):0;}
+function _subFlags(row,h){return 弱勢補助關鍵字.map(kw=>getCols(h,kw).some(x=>bv(row,x))?1:0);}
+
+function buildPerfFeatures(row,h){
+  const 曠c=getCols(h,'曠課','缺曠課總數').slice(0,8),缺c=getCols(h,'缺曠課總數').slice(0,8),請c=getCols(h,'請假總數').slice(0,8);
+  const 嘉c=getCols(h,'嘉獎數').slice(0,8),小fc=getCols(h,'小功數').slice(0,8),大fc=getCols(h,'大功數').slice(0,8),申c=getCols(h,'申誡數').slice(0,8),小oc=getCols(h,'小過數').slice(0,8),大oc=getCols(h,'大過數').slice(0,8),學c=getCols(h,'總修習學分').slice(0,8);
+  const 總曠=_sum(row,曠c),總缺=_sum(row,缺c),總假=_sum(row,請c),學分=_sum(row,學c)||1;
+  const 功=(_sum(row,大fc)*9+_sum(row,小fc)*3+_sum(row,嘉c))-(_sum(row,大oc)*9+_sum(row,小oc)*3+_sum(row,申c));
   const 前半=曠c.slice(0,4).reduce((a,x)=>a+(nv(row,x)||0),0)||1;
-  const 後半=曠c.slice(4).reduce((a,x)=>a+(nv(row,x)||0),0);
-  const 功=(sum(大fc)*9+sum(小fc)*3+sum(嘉c))-(sum(大oc)*9+sum(小oc)*3+sum(申c));
-  let 補=0;弱勢補助關鍵字.forEach(kw=>{if(getCols(h,kw).some(x=>bv(row,x)))補++;});
-  const s=(c,i)=>nv(row,c[i])||0;
-  return[row['性別_編碼']||0,row['入學方式_編碼']||0,row['學制_編碼']||0,row['系所_編碼']||0,總曠,總缺,總假,mx(曠c),lv(曠c)-fv(曠c),fv(曠c),mx(缺c),lv(缺c)-fv(缺c),lv(請c)-fv(請c),mx(請c),總缺/學分,總缺>0?總曠/總缺:0,後半/前半,s(曠c,0),s(曠c,1),s(曠c,2),s(曠c,3),s(曠c,4),s(缺c,0),s(缺c,1),s(缺c,2),s(缺c,3),s(請c,1),s(請c,2),s(請c,3),s(請c,4),功,補];
+  const 後半=曠c.slice(4,8).reduce((a,x)=>a+(nv(row,x)||0),0);
+  const 補旗=_subFlags(row,h);const 補數=補旗.reduce((a,b)=>a+b,0);
+  return[row['性別_編碼']||0,row['入學方式_編碼']||0,row['學制_編碼']||0,row['系所_編碼']||0,總曠,總缺,總假,功,_mx(row,曠c),_lv(row,曠c)-_fv(row,曠c),_fv(row,曠c),_mx(row,缺c),_lv(row,缺c)-_fv(row,缺c),_mx(row,請c),_lv(row,請c)-_fv(row,請c),總缺/學分,總缺>0?總曠/總缺:0,_s(row,曠c,0),_s(row,曠c,1),_s(row,曠c,2),_s(row,曠c,3),_s(row,曠c,4),_s(row,曠c,5),_s(row,曠c,6),_s(row,曠c,7),_s(row,缺c,0),_s(row,缺c,1),_s(row,缺c,2),_s(row,缺c,3),_s(row,缺c,4),_s(row,缺c,5),_s(row,缺c,6),_s(row,缺c,7),_s(row,請c,0),_s(row,請c,1),_s(row,請c,2),_s(row,請c,3),_s(row,請c,4),_s(row,請c,5),_s(row,請c,6),_s(row,請c,7),後半/前半,補旗[0],補旗[1],補旗[2],補旗[3],補旗[4],補旗[5],補數];
+}
+
+function buildEarlyFeatures(row,h){
+  const 曠c=getCols(h,'曠課','缺曠課總數').slice(0,2),缺c=getCols(h,'缺曠課總數').slice(0,2),請c=getCols(h,'請假總數').slice(0,2);
+  const 嘉c=getCols(h,'嘉獎數').slice(0,2),小fc=getCols(h,'小功數').slice(0,2),大fc=getCols(h,'大功數').slice(0,2),申c=getCols(h,'申誡數').slice(0,2),小oc=getCols(h,'小過數').slice(0,2),大oc=getCols(h,'大過數').slice(0,2),學c=getCols(h,'總修習學分').slice(0,2);
+  const 總曠=_sum(row,曠c),總缺=_sum(row,缺c),總假=_sum(row,請c),學分=_sum(row,學c)||1;
+  const 功=(_sum(row,大fc)*9+_sum(row,小fc)*3+_sum(row,嘉c))-(_sum(row,大oc)*9+_sum(row,小oc)*3+_sum(row,申c));
+  const 補旗=_subFlags(row,h);const 補數=補旗.reduce((a,b)=>a+b,0);
+  return[row['性別_編碼']||0,row['入學方式_編碼']||0,row['學制_編碼']||0,row['系所_編碼']||0,總曠,總缺,總假,功,_mx(row,曠c),_lv(row,曠c)-_fv(row,曠c),_fv(row,曠c),_mx(row,缺c),_lv(row,缺c)-_fv(row,缺c),_mx(row,請c),_lv(row,請c)-_fv(row,請c),總缺/學分,總缺>0?總曠/總缺:0,_s(row,曠c,0),_s(row,曠c,1),_s(row,缺c,0),_s(row,缺c,1),_s(row,請c,0),_s(row,請c,1),補旗[0],補旗[1],補旗[2],補旗[3],補旗[4],補旗[5],補數];
 }
 
 function extractProbabilities(probOutput,batchSize){
@@ -323,6 +398,26 @@ function processRiskFile(file){
   }catch(err){hideL();alert('讀取失敗：'+err.message);}};r.readAsArrayBuffer(file);
 }
 
+async function runOnnxInference(raw,h,sess,featBuilder,featCount,setProgress){
+  const 性M={},入M={},制M={},所M={};
+  raw.forEach(r=>{if(r['性別']&&!(r['性別']in 性M))性M[r['性別']]=Object.keys(性M).length;if(r['入學方式']&&!(r['入學方式']in 入M))入M[r['入學方式']]=Object.keys(入M).length;if(r['學制']&&!(r['學制']in 制M))制M[r['學制']]=Object.keys(制M).length;if(r['系所名稱']&&!(r['系所名稱']in 所M))所M[r['系所名稱']]=Object.keys(所M).length;});
+  const enc=raw.map(r=>({...r,'性別_編碼':性M[r['性別']]??0,'入學方式_編碼':入M[r['入學方式']]??0,'學制_編碼':制M[r['學制']]??0,'系所_編碼':所M[r['系所名稱']]??0}));
+  const results=[];const bs=100;
+  for(let i=0;i<enc.length;i+=bs){
+    const batch=enc.slice(i,i+bs);const flat=new Float32Array(batch.map(r=>featBuilder(r,h)).flat());
+    const tensor=new ort.Tensor('float32',flat,[batch.length,featCount]);
+    const inputName=sess.inputNames[0]||'float_input';const out=await sess.run({[inputName]:tensor});
+    const outputNames=Object.keys(out);
+    const labelOutput=out['Label']||out['output_label']||out[outputNames[0]];
+    const probOutput=out['probabilities']||out['output_probability']||out[outputNames[1]];
+    const preds=labelOutput?.data?Array.from(labelOutput.data).map(v=>Number(v)):Array(batch.length).fill(0);
+    const probClass1=extractProbabilities(probOutput,batch.length);
+    batch.forEach((r,j)=>{const pred=Number(preds[j])||0;const prob=Math.max(0,Math.min(1,Number(probClass1[j])||0));const risk=getProbRisk(prob);results.push({學生識別碼:r['學生識別碼']||'',系所名稱:r['系所名稱']||'',入學學年:r['入學學年']||'',最終學籍狀況:lastStatus(r,h),預測結果:pred,預測機率:prob,風險等級:risk.level,barColor:risk.barColor,tag:risk.tag});});
+    setProgress(50+Math.round(((i+batch.length)/enc.length)*40));
+  }
+  return results.sort((a,b)=>b.預測機率-a.預測機率);
+}
+
 async function processModelFile(file){
   showL('讀取 Excel 中...');
   try{
@@ -332,36 +427,37 @@ async function processModelFile(file){
     document.getElementById('file-loaded-model').style.display='flex';document.getElementById('upload-zone-model').style.display='none';
     document.getElementById('file-name-model').textContent=file.name;document.getElementById('file-info-model').textContent=`共 ${raw.length} 筆`;
     setP('model',20,'載入 AI 模型中...');
-    if(!onnxSess)onnxSess=await ort.InferenceSession.create('./xgboost_model.onnx');
-    setP('model',40,'進行特徵工程...');
-    const 性M={},入M={},制M={},所M={};
-    raw.forEach(r=>{if(r['性別']&&!(r['性別']in 性M))性M[r['性別']]=Object.keys(性M).length;if(r['入學方式']&&!(r['入學方式']in 入M))入M[r['入學方式']]=Object.keys(入M).length;if(r['學制']&&!(r['學制']in 制M))制M[r['學制']]=Object.keys(制M).length;if(r['系所名稱']&&!(r['系所名稱']in 所M))所M[r['系所名稱']]=Object.keys(所M).length;});
-    const enc=raw.map(r=>({...r,'性別_編碼':性M[r['性別']]??0,'入學方式_編碼':入M[r['入學方式']]??0,'學制_編碼':制M[r['學制']]??0,'系所_編碼':所M[r['系所名稱']]??0}));
-    setP('model',50,'AI 預測中...');const results=[];const bs=100;
-    for(let i=0;i<enc.length;i+=bs){
-      const batch=enc.slice(i,i+bs);const flat=new Float32Array(batch.map(r=>buildFeatures(r,h)).flat());
-      const tensor=new ort.Tensor('float32',flat,[batch.length,32]);
-      const inputName=onnxSess.inputNames[0]||'float_input';const out=await onnxSess.run({[inputName]:tensor});
-      const outputNames=Object.keys(out);
-      const labelOutput=out['Label']||out['output_label']||out[outputNames[0]];
-      const probOutput=out['probabilities']||out['output_probability']||out[outputNames[1]];
-      const preds=labelOutput?.data?Array.from(labelOutput.data).map(v=>Number(v)):Array(batch.length).fill(0);
-      const probClass1=extractProbabilities(probOutput,batch.length);
-      batch.forEach((r,j)=>{const pred=Number(preds[j])||0;const prob=Math.max(0,Math.min(1,Number(probClass1[j])||0));const risk=getProbRisk(prob);results.push({學生識別碼:r['學生識別碼']||'',系所名稱:r['系所名稱']||'',入學學年:r['入學學年']||'',最終學籍狀況:lastStatus(r,h),預測結果:pred,預測機率:prob,風險等級:risk.level,barColor:risk.barColor,tag:risk.tag});});
-      setP('model',50+Math.round(((i+batch.length)/enc.length)*40),'AI 預測中...');
-    }
-    modelData=results.sort((a,b)=>b.預測機率-a.預測機率);
+    if(!onnxSessPerf)onnxSessPerf=await ort.InferenceSession.create('./performance_model.onnx');
+    setP('model',40,'進行特徵工程...');setP('model',50,'AI 預測中...');
+    modelData=await runOnnxInference(raw,h,onnxSessPerf,buildPerfFeatures,49,p=>setP('model',p,'AI 預測中...'));
     setP('model',100,'完成！');
     setTimeout(()=>{hideL();buildYF('model',modelData,modelSelYears);document.getElementById('filter-card-model').style.display='block';document.getElementById('empty-state-model').style.display='none';document.getElementById('select-year-model').style.display='block';},400);
+  }catch(err){hideL();alert('AI 預測失敗：'+err.message);console.error(err);}
+}
+
+async function processDropoutFile(file){
+  showL('讀取 Excel 中...');
+  try{
+    const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});const raw=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:null});
+    if(!raw.length){hideL();alert('沒有資料！');return;}
+    const h=Object.keys(raw[0]);
+    document.getElementById('file-loaded-dropout').style.display='flex';document.getElementById('upload-zone-dropout').style.display='none';
+    document.getElementById('file-name-dropout').textContent=file.name;document.getElementById('file-info-dropout').textContent=`共 ${raw.length} 筆`;
+    setP('dropout',20,'載入 AI 模型中...');
+    if(!onnxSessDrop)onnxSessDrop=await ort.InferenceSession.create('./dropout_model.onnx');
+    setP('dropout',40,'進行特徵工程...');setP('dropout',50,'AI 預測中...');
+    dropoutData=await runOnnxInference(raw,h,onnxSessDrop,buildEarlyFeatures,30,p=>setP('dropout',p,'AI 預測中...'));
+    setP('dropout',100,'完成！');
+    setTimeout(()=>{hideL();buildYF('dropout',dropoutData,dropoutSelYears);document.getElementById('filter-card-dropout').style.display='block';document.getElementById('empty-state-dropout').style.display='none';document.getElementById('select-year-dropout').style.display='block';},400);
   }catch(err){hideL();alert('AI 預測失敗：'+err.message);console.error(err);}
 }
 
 function buildYF(type,data,sel){
   const years=[...new Set(data.map(d=>String(d.入學學年)).filter(Boolean))].sort();
   const c=document.getElementById(`year-btns-${type}`);c.querySelectorAll('.year-btn[data-year]').forEach(b=>b.remove());
-  years.forEach(y=>{const b=document.createElement('button');b.className='year-btn';b.dataset.year=y;b.textContent=y;b.addEventListener('click',()=>{b.classList.toggle('active');if(b.classList.contains('active'))sel.add(y);else sel.delete(y);type==='risk'?updRisk():updModel();});c.appendChild(b);});
-  document.getElementById(`btn-all-${type}`).onclick=()=>{years.forEach(y=>sel.add(y));c.querySelectorAll('.year-btn[data-year]').forEach(b=>b.classList.add('active'));type==='risk'?updRisk():updModel();};
-  document.getElementById(`btn-clear-${type}`).onclick=()=>{sel.clear();c.querySelectorAll('.year-btn[data-year]').forEach(b=>b.classList.remove('active'));type==='risk'?updRisk():updModel();};
+  years.forEach(y=>{const b=document.createElement('button');b.className='year-btn';b.dataset.year=y;b.textContent=y;b.addEventListener('click',()=>{b.classList.toggle('active');if(b.classList.contains('active'))sel.add(y);else sel.delete(y);if(type==='risk')updRisk();else if(type==='model')updModel();else updDropout();});c.appendChild(b);});
+  document.getElementById(`btn-all-${type}`).onclick=()=>{years.forEach(y=>sel.add(y));c.querySelectorAll('.year-btn[data-year]').forEach(b=>b.classList.add('active'));if(type==='risk')updRisk();else if(type==='model')updModel();else updDropout();};
+  document.getElementById(`btn-clear-${type}`).onclick=()=>{sel.clear();c.querySelectorAll('.year-btn[data-year]').forEach(b=>b.classList.remove('active'));if(type==='risk')updRisk();else if(type==='model')updModel();else updDropout();};
 }
 
 function updRisk(){
@@ -372,7 +468,6 @@ function updRisk(){
   const mi=f.filter(d=>d.整體風險==='中風險').sort((a,b)=>b.總分-a.總分);
   const lo=f.filter(d=>d.整體風險==='低風險').sort((a,b)=>b.總分-a.總分);
   ['high','mid','low'].forEach((k,i)=>{const arr=[hi,mi,lo][i];document.getElementById(`cnt-${k}`).textContent=arr.length;document.getElementById(`lbl-${k}`).textContent=arr.length+' 人';});
-  // 各面向觸發統計
   document.getElementById('sum-score').textContent=f.filter(d=>d.triggers.成績.length>0).length;
   document.getElementById('sum-attend').textContent=f.filter(d=>d.triggers.出缺席.length>0).length;
   document.getElementById('sum-reward').textContent=f.filter(d=>d.triggers.獎懲.length>0).length;
@@ -389,13 +484,27 @@ function updModel(){
   const hi=f.filter(d=>d.風險等級==='高風險'),mi=f.filter(d=>d.風險等級==='中風險'),lo=f.filter(d=>d.風險等級==='低風險');
   document.getElementById('cnt-model-high').textContent=hi.length;document.getElementById('cnt-model-mid').textContent=mi.length;document.getElementById('cnt-model-low').textContent=lo.length;document.getElementById('cnt-model-total').textContent=f.length;
   document.getElementById('lbl-model-high').textContent=hi.length+' 人';document.getElementById('lbl-model-mid').textContent=mi.length+' 人';document.getElementById('lbl-model-low').textContent=lo.length+' 人';
-  const disp=modelSelPred==='all'?f:modelSelPred==='high'?hi:modelSelPred==='mid'?mi:lo;
   renderModelRows('rows-model-high',modelSelPred==='all'||modelSelPred==='high'?hi:[]);
   renderModelRows('rows-model-mid',modelSelPred==='all'||modelSelPred==='mid'?mi:[]);
   renderModelRows('rows-model-low',modelSelPred==='all'||modelSelPred==='low'?lo:[]);
-  renderCharts(f);
+  renderCharts(f,charts,featImportancePerf,'chart-prob','chart-dept','chart-year','chart-feat',{prob:'rgba(26,86,219,0.7)',high:'rgba(192,33,33,0.7)',line:'#E02424',lineFill:'rgba(192,33,33,0.1)',featBar:'rgba(26,86,219,0.85)',featBarBg:'rgba(147,197,253,0.8)'});
   document.getElementById('header-dl-btn').style.display='block';
   document.getElementById('header-dl-btn').textContent='⬇ 下載預測結果';
+}
+
+function updDropout(){
+  if(dropoutSelYears.size===0){document.getElementById('select-year-dropout').style.display='block';document.getElementById('result-dropout').style.display='none';return;}
+  document.getElementById('select-year-dropout').style.display='none';document.getElementById('result-dropout').style.display='block';
+  const f=dropoutData.filter(d=>dropoutSelYears.has(String(d.入學學年)));
+  const hi=f.filter(d=>d.風險等級==='高風險'),mi=f.filter(d=>d.風險等級==='中風險'),lo=f.filter(d=>d.風險等級==='低風險');
+  document.getElementById('cnt-dropout-high').textContent=hi.length;document.getElementById('cnt-dropout-mid').textContent=mi.length;document.getElementById('cnt-dropout-low').textContent=lo.length;document.getElementById('cnt-dropout-total').textContent=f.length;
+  document.getElementById('lbl-dropout-high').textContent=hi.length+' 人';document.getElementById('lbl-dropout-mid').textContent=mi.length+' 人';document.getElementById('lbl-dropout-low').textContent=lo.length+' 人';
+  renderModelRows('rows-dropout-high',dropoutSelPred==='all'||dropoutSelPred==='high'?hi:[]);
+  renderModelRows('rows-dropout-mid',dropoutSelPred==='all'||dropoutSelPred==='mid'?mi:[]);
+  renderModelRows('rows-dropout-low',dropoutSelPred==='all'||dropoutSelPred==='low'?lo:[]);
+  renderCharts(f,chartsDrop,featImportanceDrop,'chart-prob-dropout','chart-dept-dropout','chart-year-dropout','chart-feat-dropout',{prob:'rgba(192,33,33,0.7)',high:'rgba(220,38,38,0.7)',line:'#DC2626',lineFill:'rgba(220,38,38,0.1)',featBar:'rgba(220,38,38,0.85)',featBarBg:'rgba(254,202,202,0.8)'});
+  document.getElementById('header-dl-btn').style.display='block';
+  document.getElementById('header-dl-btn').textContent='⬇ 下載預警名單';
 }
 
 function tg(r){const c=r==='高風險'?'tag-red':r==='中風險'?'tag-amber':'tag-green';return`<span class="tag ${c}">${r}</span>`;}
@@ -426,47 +535,36 @@ function renderModelRows(id,data){
   });
 }
 
-function renderCharts(data){renderProbChart(data);renderDeptChart(data);renderYearChart(data);renderFeatChart();}
-
-function renderProbChart(data){
-  if(charts.prob){charts.prob.destroy();charts.prob=null;}
+function renderCharts(data,chartsObj,featImp,probId,deptId,yearId,featId,palette){
+  if(chartsObj.prob){chartsObj.prob.destroy();chartsObj.prob=null;}
   const bins=Array(10).fill(0);data.forEach(d=>{const i=Math.min(Math.floor(d.預測機率*10),9);bins[i]++;});
   const labels=['0-10%','10-20%','20-30%','30-40%','40-50%','50-60%','60-70%','70-80%','80-90%','90-100%'];
-  const colors=labels.map((_,i)=>i>=8?'rgba(192,33,33,0.8)':i>=5?'rgba(245,158,11,0.8)':'rgba(26,86,219,0.7)');
-  charts.prob=new Chart(document.getElementById('chart-prob'),{type:'bar',data:{labels,datasets:[{data:bins,backgroundColor:colors,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},datalabels:{display:false}},scales:{y:{beginAtZero:true,ticks:{font:{size:11}}},x:{ticks:{font:{size:10}}}}}});
-}
-
-function renderDeptChart(data){
-  if(charts.dept){charts.dept.destroy();charts.dept=null;}
+  const colors=labels.map((_,i)=>i>=8?'rgba(192,33,33,0.8)':i>=5?'rgba(245,158,11,0.8)':palette.prob);
+  chartsObj.prob=new Chart(document.getElementById(probId),{type:'bar',data:{labels,datasets:[{data:bins,backgroundColor:colors,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{font:{size:11}}},x:{ticks:{font:{size:10}}}}}});
+  if(chartsObj.dept){chartsObj.dept.destroy();chartsObj.dept=null;}
   const dm={};data.forEach(d=>{if(!d.系所名稱)return;if(!dm[d.系所名稱])dm[d.系所名稱]={t:0,h:0};dm[d.系所名稱].t++;if(d.風險等級==='高風險')dm[d.系所名稱].h++;});
   const sorted=Object.entries(dm).map(([k,v])=>({name:k,rate:v.t>0?v.h/v.t:0})).sort((a,b)=>b.rate-a.rate);
-  document.getElementById('chart-dept').parentElement.style.height=(sorted.length*28+40)+'px';
-  charts.dept=new Chart(document.getElementById('chart-dept'),{type:'bar',data:{labels:sorted.map(d=>d.name),datasets:[{data:sorted.map(d=>Math.round(d.rate*100)),backgroundColor:'rgba(192,33,33,0.7)',borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.parsed.x}%`}}},scales:{x:{beginAtZero:true,max:100,ticks:{callback:v=>v+'%',font:{size:11}}},y:{ticks:{font:{size:10}}}}}});
-}
-
-function renderYearChart(data){
-  if(charts.year){charts.year.destroy();charts.year=null;}
+  document.getElementById(deptId).parentElement.style.height=(sorted.length*28+40)+'px';
+  chartsObj.dept=new Chart(document.getElementById(deptId),{type:'bar',data:{labels:sorted.map(d=>d.name),datasets:[{data:sorted.map(d=>Math.round(d.rate*100)),backgroundColor:palette.high,borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.parsed.x}%`}}},scales:{x:{beginAtZero:true,max:100,ticks:{callback:v=>v+'%',font:{size:11}}},y:{ticks:{font:{size:10}}}}}});
+  if(chartsObj.year){chartsObj.year.destroy();chartsObj.year=null;}
   const ym={};data.forEach(d=>{const y=String(d.入學學年);if(!y)return;if(!ym[y])ym[y]={t:0,h:0};ym[y].t++;if(d.風險等級==='高風險')ym[y].h++;});
   const years=Object.keys(ym).sort();const rates=years.map(y=>ym[y].t>0?Math.round(ym[y].h/ym[y].t*100):0);
-  charts.year=new Chart(document.getElementById('chart-year'),{type:'line',data:{labels:years,datasets:[{data:rates,borderColor:'#E02424',backgroundColor:'rgba(192,33,33,0.1)',tension:0.3,fill:true,pointBackgroundColor:'#E02424',pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`高風險比例：${ctx.parsed.y}%`}}},scales:{y:{beginAtZero:true,max:100,ticks:{callback:v=>v+'%',font:{size:11}}},x:{ticks:{font:{size:11}}}}}});
-}
-
-function renderFeatChart(){
-  if(charts.feat){charts.feat.destroy();charts.feat=null;}
-  const sorted=[...featImportance].sort((a,b)=>a.value-b.value);
-  charts.feat=new Chart(document.getElementById('chart-feat'),{type:'bar',data:{labels:sorted.map(d=>d.name),datasets:[{data:sorted.map(d=>d.value),backgroundColor:sorted.map((_,i)=>i===sorted.length-1?'rgba(26,86,219,0.85)':'rgba(147,197,253,0.8)'),borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{font:{size:11}}},y:{ticks:{font:{size:11}}}}}});
+  chartsObj.year=new Chart(document.getElementById(yearId),{type:'line',data:{labels:years,datasets:[{data:rates,borderColor:palette.line,backgroundColor:palette.lineFill,tension:0.3,fill:true,pointBackgroundColor:palette.line,pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`高風險比例：${ctx.parsed.y}%`}}},scales:{y:{beginAtZero:true,max:100,ticks:{callback:v=>v+'%',font:{size:11}}},x:{ticks:{font:{size:11}}}}}});
+  if(chartsObj.feat){chartsObj.feat.destroy();chartsObj.feat=null;}
+  const sortedF=[...featImp].sort((a,b)=>a.value-b.value);
+  chartsObj.feat=new Chart(document.getElementById(featId),{type:'bar',data:{labels:sortedF.map(d=>d.name),datasets:[{data:sortedF.map(d=>d.value),backgroundColor:sortedF.map((_,i)=>i===sortedF.length-1?palette.featBar:palette.featBarBg),borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{font:{size:11}}},y:{ticks:{font:{size:11}}}}}});
 }
 
 function toggleSec(k){const b=document.getElementById('body-'+k),c=document.getElementById('chev-'+k),o=b.style.display!=='none';b.style.display=o?'none':'';c.classList.toggle('open',!o);}
 function toggleMod(k){const b=document.getElementById('body-'+k),c=document.getElementById('chev-'+k),o=b.style.display!=='none';b.style.display=o?'none':'';c.classList.toggle('open',!o);}
+function toggleDrop(k){const b=document.getElementById('body-'+k),c=document.getElementById('chev-'+k),o=b.style.display!=='none';b.style.display=o?'none':'';c.classList.toggle('open',!o);}
 function showL(t){document.getElementById('loading').classList.add('show');document.getElementById('loading-text').textContent=t;}
 function hideL(){document.getElementById('loading').classList.remove('show');}
 function setP(tp,p,t){document.getElementById(`progress-wrap-${tp}`).style.display='block';document.getElementById(`progress-fill-${tp}`).style.width=p+'%';document.getElementById(`progress-text-${tp}`).textContent=t;document.getElementById('loading-text').textContent=t;}
 
 function handleHeaderDownload(){
-  const activeTab=document.getElementById('tab-risk').classList.contains('active')?'risk':'model';
-  if(activeTab==='risk') downloadRisk();
-  else downloadModel();
+  const t=document.getElementById('tab-risk').classList.contains('active')?'risk':document.getElementById('tab-model').classList.contains('active')?'model':'dropout';
+  if(t==='risk')downloadRisk();else if(t==='model')downloadModel();else downloadDropout();
 }
 
 function downloadRisk(){
@@ -475,38 +573,10 @@ function downloadRisk(){
   const timeStr=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
   const yearStr=[...riskSelYears].sort().join('、')||'全部';
   const statusStr=riskSelStatus==='all'?'全部':riskSelStatus;
-  // 摘要列
-  const hi=f.filter(d=>d.整體風險==='高風險').length;
-  const mi=f.filter(d=>d.整體風險==='中風險').length;
-  const lo=f.filter(d=>d.整體風險==='低風險').length;
-  const summaryRows=[
-    {'說明':'下載時間','內容':timeStr},
-    {'說明':'篩選學年','內容':yearStr},
-    {'說明':'篩選學籍','內容':statusStr},
-    {'說明':'高風險人數','內容':hi},
-    {'說明':'中風險人數','內容':mi},
-    {'說明':'低風險人數','內容':lo},
-    {'說明':'總計','內容':f.length},
-    {'說明':'','內容':''},
-  ];
-  const dataRows=f.map(d=>({
-    學生識別碼:d.學生識別碼,
-    系所名稱:d.系所名稱,
-    入學學年:d.入學學年,
-    最終學籍狀況:d.最終學籍狀況,
-    整體風險:d.整體風險,
-    總分:d.總分,
-    成績風險:d.成績風險,
-    出缺席風險:d.出缺席風險,
-    獎懲風險:d.獎懲風險,
-    經濟補助風險:d.經濟風險,
-    觸發原因:[...d.triggers.成績,...d.triggers.出缺席,...d.triggers.獎懲,...d.triggers.經濟].join('；')||'無',
-  }));
-  const wb=XLSX.utils.book_new();
-  const ws1=XLSX.utils.json_to_sheet(summaryRows);
-  XLSX.utils.book_append_sheet(wb,ws1,'摘要');
-  const ws2=XLSX.utils.json_to_sheet(dataRows);
-  XLSX.utils.book_append_sheet(wb,ws2,'風險名單');
+  const hi=f.filter(d=>d.整體風險==='高風險').length,mi=f.filter(d=>d.整體風險==='中風險').length,lo=f.filter(d=>d.整體風險==='低風險').length;
+  const summaryRows=[{'說明':'下載時間','內容':timeStr},{'說明':'篩選學年','內容':yearStr},{'說明':'篩選學籍','內容':statusStr},{'說明':'高風險人數','內容':hi},{'說明':'中風險人數','內容':mi},{'說明':'低風險人數','內容':lo},{'說明':'總計','內容':f.length},{'說明':'','內容':''}];
+  const dataRows=f.map(d=>({學生識別碼:d.學生識別碼,系所名稱:d.系所名稱,入學學年:d.入學學年,最終學籍狀況:d.最終學籍狀況,整體風險:d.整體風險,總分:d.總分,成績風險:d.成績風險,出缺席風險:d.出缺席風險,獎懲風險:d.獎懲風險,經濟補助風險:d.經濟風險,觸發原因:[...d.triggers.成績,...d.triggers.出缺席,...d.triggers.獎懲,...d.triggers.經濟].join('；')||'無'}));
+  const wb=XLSX.utils.book_new();const ws1=XLSX.utils.json_to_sheet(summaryRows);XLSX.utils.book_append_sheet(wb,ws1,'摘要');const ws2=XLSX.utils.json_to_sheet(dataRows);XLSX.utils.book_append_sheet(wb,ws2,'風險名單');
   XLSX.writeFile(wb,`學生風險評估名單_${timeStr.replace(':','').replace(' ','_')}.xlsx`);
 }
 
@@ -515,41 +585,32 @@ function downloadModel(){
   const now=new Date();
   const timeStr=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
   const yearStr=[...modelSelYears].sort().join('、')||'全部';
-  const hi=f.filter(d=>d.風險等級==='高風險').length;
-  const mi=f.filter(d=>d.風險等級==='中風險').length;
-  const lo=f.filter(d=>d.風險等級==='低風險').length;
-  const summaryRows=[
-    {'說明':'下載時間','內容':timeStr},
-    {'說明':'篩選學年','內容':yearStr},
-    {'說明':'模型準確率','內容':'75.6%'},
-    {'說明':'5折交叉驗證','內容':'75.9%'},
-    {'說明':'高風險人數（>80%）','內容':hi},
-    {'說明':'中風險人數（>50%~80%）','內容':mi},
-    {'說明':'低風險人數（≤50%）','內容':lo},
-    {'說明':'總計','內容':f.length},
-    {'說明':'','內容':''},
-  ];
-  const dataRows=f.map(d=>({
-    學生識別碼:d.學生識別碼,
-    系所名稱:d.系所名稱,
-    入學學年:d.入學學年,
-    最終學籍狀況:d.最終學籍狀況,
-    風險等級:d.風險等級,
-    預測機率:(d.預測機率*100).toFixed(2)+'%',
-  }));
-  const wb=XLSX.utils.book_new();
-  const ws1=XLSX.utils.json_to_sheet(summaryRows);
-  XLSX.utils.book_append_sheet(wb,ws1,'摘要');
-  const ws2=XLSX.utils.json_to_sheet(dataRows);
-  XLSX.utils.book_append_sheet(wb,ws2,'預測結果');
+  const hi=f.filter(d=>d.風險等級==='高風險').length,mi=f.filter(d=>d.風險等級==='中風險').length,lo=f.filter(d=>d.風險等級==='低風險').length;
+  const summaryRows=[{'說明':'下載時間','內容':timeStr},{'說明':'篩選學年','內容':yearStr},{'說明':'模型','內容':'學習成效預測 (49 特徵)'},{'說明':'模型表現','內容':'5折交叉驗證 ROC-AUC 84.7%、F1 77.0%；Hold-out ROC-AUC 85.4%'},{'說明':'高風險人數（>80%）','內容':hi},{'說明':'中風險人數（>50%~80%）','內容':mi},{'說明':'低風險人數（≤50%）','內容':lo},{'說明':'總計','內容':f.length},{'說明':'','內容':''}];
+  const dataRows=f.map(d=>({學生識別碼:d.學生識別碼,系所名稱:d.系所名稱,入學學年:d.入學學年,最終學籍狀況:d.最終學籍狀況,風險等級:d.風險等級,預測機率:(d.預測機率*100).toFixed(2)+'%'}));
+  const wb=XLSX.utils.book_new();const ws1=XLSX.utils.json_to_sheet(summaryRows);XLSX.utils.book_append_sheet(wb,ws1,'摘要');const ws2=XLSX.utils.json_to_sheet(dataRows);XLSX.utils.book_append_sheet(wb,ws2,'預測結果');
   XLSX.writeFile(wb,`學習成效預測結果_${timeStr.replace(':','').replace(' ','_')}.xlsx`);
+}
+
+function downloadDropout(){
+  const f=dropoutData.filter(d=>dropoutSelYears.has(String(d.入學學年)));
+  const now=new Date();
+  const timeStr=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  const yearStr=[...dropoutSelYears].sort().join('、')||'全部';
+  const hi=f.filter(d=>d.風險等級==='高風險').length,mi=f.filter(d=>d.風險等級==='中風險').length,lo=f.filter(d=>d.風險等級==='低風險').length;
+  const summaryRows=[{'說明':'下載時間','內容':timeStr},{'說明':'篩選學年','內容':yearStr},{'說明':'模型','內容':'休退學風險預警 (30 特徵, 僅前 2 學期)'},{'說明':'模型表現','內容':'5折交叉驗證 ROC-AUC 77.7%、Recall 56.5%；Hold-out ROC-AUC 76.6%'},{'說明':'高風險人數（>80%）','內容':hi},{'說明':'中風險人數（>50%~80%）','內容':mi},{'說明':'低風險人數（≤50%）','內容':lo},{'說明':'總計','內容':f.length},{'說明':'','內容':''}];
+  const dataRows=f.map(d=>({學生識別碼:d.學生識別碼,系所名稱:d.系所名稱,入學學年:d.入學學年,最終學籍狀況:d.最終學籍狀況,風險等級:d.風險等級,預測機率:(d.預測機率*100).toFixed(2)+'%'}));
+  const wb=XLSX.utils.book_new();const ws1=XLSX.utils.json_to_sheet(summaryRows);XLSX.utils.book_append_sheet(wb,ws1,'摘要');const ws2=XLSX.utils.json_to_sheet(dataRows);XLSX.utils.book_append_sheet(wb,ws2,'休退學預警名單');
+  XLSX.writeFile(wb,`休退學預警名單_${timeStr.replace(':','').replace(' ','_')}.xlsx`);
 }
 
 document.getElementById('file-input-risk').addEventListener('change',e=>{if(e.target.files[0])processRiskFile(e.target.files[0]);});
 document.getElementById('file-input-model').addEventListener('change',e=>{if(e.target.files[0])processModelFile(e.target.files[0]);});
-['risk','model'].forEach(tp=>{const z=document.getElementById(`upload-zone-${tp}`);z.addEventListener('dragover',e=>{e.preventDefault();z.classList.add('dragover');});z.addEventListener('dragleave',()=>z.classList.remove('dragover'));z.addEventListener('drop',e=>{e.preventDefault();z.classList.remove('dragover');const f=e.dataTransfer.files[0];if(f){tp==='risk'?processRiskFile(f):processModelFile(f);}});});
+document.getElementById('file-input-dropout').addEventListener('change',e=>{if(e.target.files[0])processDropoutFile(e.target.files[0]);});
+['risk','model','dropout'].forEach(tp=>{const z=document.getElementById(`upload-zone-${tp}`);z.addEventListener('dragover',e=>{e.preventDefault();z.classList.add('dragover');});z.addEventListener('dragleave',()=>z.classList.remove('dragover'));z.addEventListener('drop',e=>{e.preventDefault();z.classList.remove('dragover');const f=e.dataTransfer.files[0];if(!f)return;if(tp==='risk')processRiskFile(f);else if(tp==='model')processModelFile(f);else processDropoutFile(f);});});
 document.querySelectorAll('#status-btns-risk .status-btn').forEach(b=>{b.addEventListener('click',()=>{document.querySelectorAll('#status-btns-risk .status-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');riskSelStatus=b.dataset.status;updRisk();});});
 document.querySelectorAll('#pred-btns .status-btn').forEach(b=>{b.addEventListener('click',()=>{document.querySelectorAll('#pred-btns .status-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');modelSelPred=b.dataset.pred;updModel();});});
+document.querySelectorAll('#pred-btns-dropout .status-btn').forEach(b=>{b.addEventListener('click',()=>{document.querySelectorAll('#pred-btns-dropout .status-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');dropoutSelPred=b.dataset.pred;updDropout();});});
 </script>
 </body>
 </html>
