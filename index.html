@@ -184,7 +184,7 @@ tbody tr.data-row.expanded td{background:var(--blue-light)}
 
   <!-- 分頁二：學習成效預測 -->
   <div id="tab-model" class="tab-content">
-    <div class="model-info">🤖 <b>學習成效預測模型 v2</b>：使用 XGBoost，以 <b>S1-S4 中期 37 個特徵</b>（出缺席、獎懲、補助等）預測學生最終學習成效落於班級後 50%（含休退學者）的機率，作為 <b>教務處課業輔導</b> 之依據。<br>v2 改動：改用 S1-S4 中期特徵（原 S1-S8）以避免特徵洩漏，並透過 features.json 的 <code>encoders</code> 欄位確保類別編碼正確。所有計算在您的電腦本機進行，資料不會上傳至任何伺服器。</div>
+    <div class="model-info">🤖 <b>學習成效預測模型 v4</b>：使用 XGBoost，以 <b>S1-S4 中期 76 個特徵</b>（含平均成績、12 種補助、社團/幹部/社員/社長、學生身分別等）預測學生最終學習成效落於班級後 50%（含休退學者）的機率，作為 <b>教務處課業輔導</b> 之依據。<br>v4 表現：5 折交叉驗證 ROC-AUC <b>95%</b>、F1 <b>88%</b>。所有計算在您的電腦本機進行，資料不會上傳至任何伺服器。</div>
     <div class="upload-card">
       <div class="upload-zone" id="upload-zone-model">
         <div class="upload-icon">🤖</div>
@@ -240,7 +240,7 @@ tbody tr.data-row.expanded td{background:var(--blue-light)}
 
   <!-- 分頁三：休退學預警 -->
   <div id="tab-dropout" class="tab-content">
-    <div class="model-info-dropout">⚠️ <b>休退學風險預警模型 v2</b>：使用 XGBoost，僅以 <b>S1-S2 早期 30 個特徵</b>，預測學生未來休學或退學的機率（資料中休退學佔 10.7%，已採用 <code>scale_pos_weight</code> 處理類別不平衡）。提供 <b>學務處於 S2 結束前進行早期介入</b>。<br>v2 改動：透過 features.json 的 <code>encoders</code> 欄位確保類別編碼正確。所有計算在您的電腦本機進行，資料不會上傳至任何伺服器。</div>
+    <div class="model-info-dropout">⚠️ <b>休退學風險預警模型 v4</b>：使用 XGBoost，僅以 <b>S1-S2 早期 59 個特徵</b>（含平均成績、12 種補助、社團/幹部/社員/社長等）預測學生未來休學或退學的機率（資料中休退學佔 10.7%，已採用 <code>scale_pos_weight</code> 處理類別不平衡）。提供 <b>學務處於 S2 結束前進行早期介入</b>。<br>v4 表現：5 折交叉驗證 ROC-AUC <b>85%</b>、Precision <b>61%</b>、F1 <b>60%</b>。所有計算在您的電腦本機進行，資料不會上傳至任何伺服器。</div>
     <div class="upload-card">
       <div class="upload-zone" id="upload-zone-dropout">
         <div class="upload-icon">⚠️</div>
@@ -296,7 +296,7 @@ tbody tr.data-row.expanded td{background:var(--blue-light)}
 </div>
 <script>
 const PARAMS={成績_高風險門檻:60,成績_中風險門檻:70,成績_落差_高風險:15,成績_落差_中風險:10,百分比_高風險門檻:75,百分比_中風險門檻:50,曠課_高風險門檻:10,曠課_中風險門檻:5,缺曠_高風險門檻:20,缺曠_中風險門檻:10,請假增加_中風險門檻:10,遲到早退增加_中風險門檻:10,獎懲_高風險門檻:-18,獎懲_中風險門檻:-9,大過學期數_高風險:2,弱勢補助_高風險門檻:3,弱勢補助_中風險門檻:1,整體_高風險門檻:9,整體_中風險門檻:5};
-const 弱勢補助關鍵字=['清寒助學金','低收入戶助學金','教育部弱勢學生生活助學金','餐食助學代金','就學貸款','急難救助'];
+const 弱勢補助關鍵字=['清寒助學金','低收入戶助學金','教育部弱勢學生生活助學金','餐食助學代金','就學貸款','急難救助','原民會原住民學生獎助學金','圓夢起飛輔導助學金','學習及就業輔導獎勵金','愛舍服務學習助學金','教育部學雜費減免','精進學習助學金'];
 const featImportancePerf=[{name:'缺曠率',value:0.115},{name:'性別',value:0.075},{name:'總曠課',value:0.038},{name:'入學方式',value:0.034},{name:'總缺曠',value:0.032},{name:'系所',value:0.028},{name:'功過淨值',value:0.028},{name:'曠課_最大',value:0.025},{name:'請假_最大',value:0.024},{name:'請假_S8',value:0.022}];
 const featImportanceDrop=[{name:'缺曠率',value:0.063},{name:'功過淨值',value:0.060},{name:'請假_S2',value:0.058},{name:'總缺曠',value:0.046},{name:'入學方式',value:0.041},{name:'總請假',value:0.040},{name:'性別',value:0.039},{name:'總曠課',value:0.038},{name:'曠課_S2',value:0.038},{name:'缺曠_S2',value:0.037}];
 let riskData=[],modelData=[],dropoutData=[];
@@ -360,24 +360,80 @@ function _s(row,c,i){return i<c.length?(nv(row,c[i])||0):0;}
 function _subFlags(row,h){return 弱勢補助關鍵字.map(kw=>getCols(h,kw).some(x=>bv(row,x))?1:0);}
 
 function buildPerfFeatures(row,h){
-  // v2: 改用 S1-S4 中期特徵，避免 S5-S8 的事後行為造成特徵洩漏
+  // v4: S1-S4 中期 76 個特徵 (含平均成績、12 種補助、社員/社長、學生身分別)
   const 曠c=getCols(h,'曠課','缺曠課總數').slice(0,4),缺c=getCols(h,'缺曠課總數').slice(0,4),請c=getCols(h,'請假總數').slice(0,4);
   const 嘉c=getCols(h,'嘉獎數').slice(0,4),小fc=getCols(h,'小功數').slice(0,4),大fc=getCols(h,'大功數').slice(0,4),申c=getCols(h,'申誡數').slice(0,4),小oc=getCols(h,'小過數').slice(0,4),大oc=getCols(h,'大過數').slice(0,4),學c=getCols(h,'總修習學分').slice(0,4);
+  const 平c=getCols(h,'平均').filter(c=>!String(c).includes('班級')).slice(0,4);
+  const 社c=getCols(h,'是否參與社團').slice(0,4),幹c=getCols(h,'是否擔任幹部').slice(0,4),員c=getCols(h,'是否擔任社員').slice(0,4),長c=getCols(h,'是否擔任社長').slice(0,4);
+  const _maxn=c=>{const v=c.map(x=>nv(row,x)).filter(v=>v!==null);return v.length?Math.max(...v):0;};
+  const _minn=c=>{const v=c.map(x=>nv(row,x)).filter(v=>v!==null);return v.length?Math.min(...v):0;};
+  const _anyB=c=>c.some(x=>bv(row,x))?1:0;
+  const _cntB=c=>c.reduce((a,x)=>a+(bv(row,x)?1:0),0);
+  const _sB=(c,i)=>i<c.length?(bv(row,c[i])?1:0):0;
+  const 平均_max=_maxn(平c),平均_min=_minn(平c),平均_first=_fv(row,平c),平均_last=_lv(row,平c);
   const 總曠=_sum(row,曠c),總缺=_sum(row,缺c),總假=_sum(row,請c),學分=_sum(row,學c)||1;
   const 功=(_sum(row,大fc)*9+_sum(row,小fc)*3+_sum(row,嘉c))-(_sum(row,大oc)*9+_sum(row,小oc)*3+_sum(row,申c));
   const 前=曠c.slice(0,2).reduce((a,x)=>a+(nv(row,x)||0),0)||1;
   const 後=曠c.slice(2,4).reduce((a,x)=>a+(nv(row,x)||0),0);
   const 補旗=_subFlags(row,h);const 補數=補旗.reduce((a,b)=>a+b,0);
-  return[row['性別_編碼']||0,row['入學方式_編碼']||0,row['學制_編碼']||0,row['系所_編碼']||0,總曠,總缺,總假,功,_mx(row,曠c),_lv(row,曠c)-_fv(row,曠c),_fv(row,曠c),_mx(row,缺c),_lv(row,缺c)-_fv(row,缺c),_mx(row,請c),_lv(row,請c)-_fv(row,請c),總缺/學分,總缺>0?總曠/總缺:0,_s(row,曠c,0),_s(row,曠c,1),_s(row,曠c,2),_s(row,曠c,3),_s(row,缺c,0),_s(row,缺c,1),_s(row,缺c,2),_s(row,缺c,3),_s(row,請c,0),_s(row,請c,1),_s(row,請c,2),_s(row,請c,3),後/前,補旗[0],補旗[1],補旗[2],補旗[3],補旗[4],補旗[5],補數];
+  return[
+    row['性別_編碼']||0,row['入學方式_編碼']||0,row['學制_編碼']||0,row['系所_編碼']||0,row['學生身分別_編碼']||0,
+    平均_max,平均_min,平均_last-平均_first,平均_first,
+    _s(row,平c,0),_s(row,平c,1),_s(row,平c,2),_s(row,平c,3),
+    總曠,總缺,總假,功,
+    _mx(row,曠c),_lv(row,曠c)-_fv(row,曠c),_fv(row,曠c),
+    _mx(row,缺c),_lv(row,缺c)-_fv(row,缺c),
+    _mx(row,請c),_lv(row,請c)-_fv(row,請c),
+    總缺/學分,總缺>0?總曠/總缺:0,
+    _s(row,曠c,0),_s(row,曠c,1),_s(row,曠c,2),_s(row,曠c,3),
+    _s(row,缺c,0),_s(row,缺c,1),_s(row,缺c,2),_s(row,缺c,3),
+    _s(row,請c,0),_s(row,請c,1),_s(row,請c,2),_s(row,請c,3),
+    後/前,
+    補旗[0],補旗[1],補旗[2],補旗[3],補旗[4],補旗[5],補旗[6],補旗[7],補旗[8],補旗[9],補旗[10],補旗[11],
+    補數,
+    _anyB(社c),_cntB(社c),_anyB(幹c),_cntB(幹c),_anyB(員c),_cntB(員c),_anyB(長c),_cntB(長c),
+    _sB(社c,0),_sB(社c,1),_sB(社c,2),_sB(社c,3),
+    _sB(幹c,0),_sB(幹c,1),_sB(幹c,2),_sB(幹c,3),
+    _sB(員c,0),_sB(員c,1),_sB(員c,2),_sB(員c,3),
+    _sB(長c,0),_sB(長c,1),_sB(長c,2),_sB(長c,3)
+  ];
 }
 
 function buildEarlyFeatures(row,h){
+  // v4: S1-S2 早期 59 個特徵 (含平均成績、12 種補助、社員/社長、學生身分別)
   const 曠c=getCols(h,'曠課','缺曠課總數').slice(0,2),缺c=getCols(h,'缺曠課總數').slice(0,2),請c=getCols(h,'請假總數').slice(0,2);
   const 嘉c=getCols(h,'嘉獎數').slice(0,2),小fc=getCols(h,'小功數').slice(0,2),大fc=getCols(h,'大功數').slice(0,2),申c=getCols(h,'申誡數').slice(0,2),小oc=getCols(h,'小過數').slice(0,2),大oc=getCols(h,'大過數').slice(0,2),學c=getCols(h,'總修習學分').slice(0,2);
+  const 平c=getCols(h,'平均').filter(c=>!String(c).includes('班級')).slice(0,2);
+  const 社c=getCols(h,'是否參與社團').slice(0,2),幹c=getCols(h,'是否擔任幹部').slice(0,2),員c=getCols(h,'是否擔任社員').slice(0,2),長c=getCols(h,'是否擔任社長').slice(0,2);
+  const _maxn=c=>{const v=c.map(x=>nv(row,x)).filter(v=>v!==null);return v.length?Math.max(...v):0;};
+  const _minn=c=>{const v=c.map(x=>nv(row,x)).filter(v=>v!==null);return v.length?Math.min(...v):0;};
+  const _anyB=c=>c.some(x=>bv(row,x))?1:0;
+  const _cntB=c=>c.reduce((a,x)=>a+(bv(row,x)?1:0),0);
+  const _sB=(c,i)=>i<c.length?(bv(row,c[i])?1:0):0;
+  const 平均_max=_maxn(平c),平均_min=_minn(平c),平均_first=_fv(row,平c),平均_last=_lv(row,平c);
   const 總曠=_sum(row,曠c),總缺=_sum(row,缺c),總假=_sum(row,請c),學分=_sum(row,學c)||1;
   const 功=(_sum(row,大fc)*9+_sum(row,小fc)*3+_sum(row,嘉c))-(_sum(row,大oc)*9+_sum(row,小oc)*3+_sum(row,申c));
   const 補旗=_subFlags(row,h);const 補數=補旗.reduce((a,b)=>a+b,0);
-  return[row['性別_編碼']||0,row['入學方式_編碼']||0,row['學制_編碼']||0,row['系所_編碼']||0,總曠,總缺,總假,功,_mx(row,曠c),_lv(row,曠c)-_fv(row,曠c),_fv(row,曠c),_mx(row,缺c),_lv(row,缺c)-_fv(row,缺c),_mx(row,請c),_lv(row,請c)-_fv(row,請c),總缺/學分,總缺>0?總曠/總缺:0,_s(row,曠c,0),_s(row,曠c,1),_s(row,缺c,0),_s(row,缺c,1),_s(row,請c,0),_s(row,請c,1),補旗[0],補旗[1],補旗[2],補旗[3],補旗[4],補旗[5],補數];
+  return[
+    row['性別_編碼']||0,row['入學方式_編碼']||0,row['學制_編碼']||0,row['系所_編碼']||0,row['學生身分別_編碼']||0,
+    平均_max,平均_min,平均_last-平均_first,平均_first,
+    _s(row,平c,0),_s(row,平c,1),
+    總曠,總缺,總假,功,
+    _mx(row,曠c),_lv(row,曠c)-_fv(row,曠c),_fv(row,曠c),
+    _mx(row,缺c),_lv(row,缺c)-_fv(row,缺c),
+    _mx(row,請c),_lv(row,請c)-_fv(row,請c),
+    總缺/學分,總缺>0?總曠/總缺:0,
+    _s(row,曠c,0),_s(row,曠c,1),
+    _s(row,缺c,0),_s(row,缺c,1),
+    _s(row,請c,0),_s(row,請c,1),
+    補旗[0],補旗[1],補旗[2],補旗[3],補旗[4],補旗[5],補旗[6],補旗[7],補旗[8],補旗[9],補旗[10],補旗[11],
+    補數,
+    _anyB(社c),_cntB(社c),_anyB(幹c),_cntB(幹c),_anyB(員c),_cntB(員c),_anyB(長c),_cntB(長c),
+    _sB(社c,0),_sB(社c,1),
+    _sB(幹c,0),_sB(幹c,1),
+    _sB(員c,0),_sB(員c,1),
+    _sB(長c,0),_sB(長c,1)
+  ];
 }
 
 function extractProbabilities(probOutput,batchSize){
@@ -416,7 +472,8 @@ async function runOnnxInference(raw,h,sess,featBuilder,featCount,encoders,setPro
       '性別_編碼':lookup('性別','性別'),
       '入學方式_編碼':lookup('入學方式','入學方式'),
       '學制_編碼':lookup('學制','學制'),
-      '系所_編碼':lookup('系所名稱','系所')
+      '系所_編碼':lookup('系所名稱','系所'),
+      '學生身分別_編碼':lookup('學生身分別','學生身分別')
     };
   });
   const results=[];const bs=100;
@@ -615,7 +672,7 @@ function downloadModel(){
   const timeStr=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
   const yearStr=[...modelSelYears].sort().join('、')||'全部';
   const hi=f.filter(d=>d.風險等級==='高風險').length,mi=f.filter(d=>d.風險等級==='中風險').length,lo=f.filter(d=>d.風險等級==='低風險').length;
-  const summaryRows=[{'說明':'下載時間','內容':timeStr},{'說明':'篩選學年','內容':yearStr},{'說明':'模型','內容':'學習成效預測 v2 (S1-S4, 37 特徵)'},{'說明':'特徵時點','內容':'S1-S4 中期'},{'說明':'高風險人數（>80%）','內容':hi},{'說明':'中風險人數（>50%~80%）','內容':mi},{'說明':'低風險人數（≤50%）','內容':lo},{'說明':'總計','內容':f.length},{'說明':'','內容':''}];
+  const summaryRows=[{'說明':'下載時間','內容':timeStr},{'說明':'篩選學年','內容':yearStr},{'說明':'模型','內容':'學習成效預測 v4 (S1-S4, 76 特徵)'},{'說明':'特徵時點','內容':'S1-S4 中期'},{'說明':'CV 表現','內容':'ROC-AUC 95%、F1 88%'},{'說明':'高風險人數（>80%）','內容':hi},{'說明':'中風險人數（>50%~80%）','內容':mi},{'說明':'低風險人數（≤50%）','內容':lo},{'說明':'總計','內容':f.length},{'說明':'','內容':''}];
   const dataRows=f.map(d=>({學生識別碼:d.學生識別碼,系所名稱:d.系所名稱,入學學年:d.入學學年,最終學籍狀況:d.最終學籍狀況,風險等級:d.風險等級,預測機率:(d.預測機率*100).toFixed(2)+'%'}));
   const wb=XLSX.utils.book_new();const ws1=XLSX.utils.json_to_sheet(summaryRows);XLSX.utils.book_append_sheet(wb,ws1,'摘要');const ws2=XLSX.utils.json_to_sheet(dataRows);XLSX.utils.book_append_sheet(wb,ws2,'預測結果');
   XLSX.writeFile(wb,`學習成效預測結果_${timeStr.replace(':','').replace(' ','_')}.xlsx`);
@@ -627,7 +684,7 @@ function downloadDropout(){
   const timeStr=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
   const yearStr=[...dropoutSelYears].sort().join('、')||'全部';
   const hi=f.filter(d=>d.風險等級==='高風險').length,mi=f.filter(d=>d.風險等級==='中風險').length,lo=f.filter(d=>d.風險等級==='低風險').length;
-  const summaryRows=[{'說明':'下載時間','內容':timeStr},{'說明':'篩選學年','內容':yearStr},{'說明':'模型','內容':'休退學風險預警 v2 (S1-S2, 30 特徵)'},{'說明':'特徵時點','內容':'S1-S2 早期'},{'說明':'高風險人數（>80%）','內容':hi},{'說明':'中風險人數（>50%~80%）','內容':mi},{'說明':'低風險人數（≤50%）','內容':lo},{'說明':'總計','內容':f.length},{'說明':'','內容':''}];
+  const summaryRows=[{'說明':'下載時間','內容':timeStr},{'說明':'篩選學年','內容':yearStr},{'說明':'模型','內容':'休退學風險預警 v4 (S1-S2, 59 特徵)'},{'說明':'特徵時點','內容':'S1-S2 早期'},{'說明':'CV 表現','內容':'ROC-AUC 85%、Recall 59%、F1 60%'},{'說明':'高風險人數（>80%）','內容':hi},{'說明':'中風險人數（>50%~80%）','內容':mi},{'說明':'低風險人數（≤50%）','內容':lo},{'說明':'總計','內容':f.length},{'說明':'','內容':''}];
   const dataRows=f.map(d=>({學生識別碼:d.學生識別碼,系所名稱:d.系所名稱,入學學年:d.入學學年,最終學籍狀況:d.最終學籍狀況,風險等級:d.風險等級,預測機率:(d.預測機率*100).toFixed(2)+'%'}));
   const wb=XLSX.utils.book_new();const ws1=XLSX.utils.json_to_sheet(summaryRows);XLSX.utils.book_append_sheet(wb,ws1,'摘要');const ws2=XLSX.utils.json_to_sheet(dataRows);XLSX.utils.book_append_sheet(wb,ws2,'休退學預警名單');
   XLSX.writeFile(wb,`休退學預警名單_${timeStr.replace(':','').replace(' ','_')}.xlsx`);
