@@ -373,8 +373,9 @@ function buildPerfFeatures(row,h){
   const 平均_max=_maxn(平c),平均_min=_minn(平c),平均_first=_fv(row,平c),平均_last=_lv(row,平c);
   const 總曠=_sum(row,曠c),總缺=_sum(row,缺c),總假=_sum(row,請c),學分=_sum(row,學c)||1;
   const 功=(_sum(row,大fc)*9+_sum(row,小fc)*3+_sum(row,嘉c))-(_sum(row,大oc)*9+_sum(row,小oc)*3+_sum(row,申c));
-  const 前=曠c.slice(0,2).reduce((a,x)=>a+(nv(row,x)||0),0)||1;
+  const 前=曠c.slice(0,2).reduce((a,x)=>a+(nv(row,x)||0),0);
   const 後=曠c.slice(2,4).reduce((a,x)=>a+(nv(row,x)||0),0);
+  const 後期惡化率=前===0?0:後/前;
   const 補旗=_subFlags(row,h);const 補數=補旗.reduce((a,b)=>a+b,0);
   return[
     row['性別_編碼']||0,row['入學方式_編碼']||0,row['學制_編碼']||0,row['系所_編碼']||0,row['學生身分別_編碼']||0,
@@ -388,7 +389,7 @@ function buildPerfFeatures(row,h){
     _s(row,曠c,0),_s(row,曠c,1),_s(row,曠c,2),_s(row,曠c,3),
     _s(row,缺c,0),_s(row,缺c,1),_s(row,缺c,2),_s(row,缺c,3),
     _s(row,請c,0),_s(row,請c,1),_s(row,請c,2),_s(row,請c,3),
-    後/前,
+    後期惡化率,
     補旗[0],補旗[1],補旗[2],補旗[3],補旗[4],補旗[5],補旗[6],補旗[7],補旗[8],補旗[9],補旗[10],補旗[11],
     補數,
     _anyB(社c),_cntB(社c),_anyB(幹c),_cntB(幹c),_anyB(員c),_cntB(員c),_anyB(長c),_cntB(長c),
