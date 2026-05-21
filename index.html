@@ -184,7 +184,38 @@ tbody tr.data-row.expanded td{background:var(--blue-light)}
 
   <!-- 分頁二：學習成效預測 -->
   <div id="tab-model" class="tab-content">
-    <div class="model-info">🤖 <b>學習成效預測模型 v4</b>：使用 XGBoost，以 <b>S1-S4 中期 76 個特徵</b>（含平均成績、12 種補助、社團/幹部/社員/社長、學生身分別等）預測學生最終學習成效落於班級後 50%（含休退學者）的機率，作為 <b>教務處課業輔導</b> 之依據。<br>v4 表現：5 折交叉驗證 ROC-AUC <b>95%</b>、F1 <b>88%</b>。所有計算在您的電腦本機進行，資料不會上傳至任何伺服器。</div>
+    <div class="model-info"><div style="line-height:1.8">
+<b>🤖 學習成效預測模型 v5</b>（XGBoost）<br>
+<b>📌 預測目標</b>：學生最終學習成效是否落於 <b>班級後 50%</b>（含休退學者），作為 <b>教務處課業輔導</b> 之依據。<br>
+<b>📊 預測機率</b>：模型對每位學生輸出 0–1 之間的 <b>條件機率</b>，代表「該生為後段班的可能性」；依此機率由高至低排序產出名單。<br>
+<b>🚦 風險分級依據</b>：<br>
+&nbsp;&nbsp;🔴 高風險（機率 &gt; 80%）：學業落後可能性高，建議優先安排補救教學<br>
+&nbsp;&nbsp;🟡 中風險（機率 50%–80%）：需持續觀察與必要時介入<br>
+&nbsp;&nbsp;🟢 低風險（機率 ≤ 50%）：定期追蹤即可<br>
+<b>⏱ 特徵時間窗口</b>：本模型所有特徵 <b>僅取自前 4 學期（S1–S4）</b>，不使用 S5 之後資料以避免特徵洩漏。<br>
+<b>⚖️ 合規說明</b>：依《性別平等教育法》考量，本版本已 <b>移除「性別」特徵</b>。<br>
+<b>📈 v5 表現</b>：5 折交叉驗證待重訓後更新（v4 為 ROC-AUC 95.2%、F1 88.5%）。<br>
+<b>🔒 隱私</b>：所有計算在您的瀏覽器本機完成，資料不會上傳至任何伺服器。
+</div></div>
+    <div class="feature-list-panel">
+      <div class="feature-list-header" onclick="toggleFL('perf')">
+        <span>📋 <b>使用特徵清單</b>（學業模型共 <b>75</b> 個特徵，時間窗口 S1–S4）</span>
+        <span class="chevron" id="chev-fl-perf">▼</span>
+      </div>
+      <div class="feature-list-body" id="body-fl-perf">
+        <div class="feature-cat"><div class="feature-cat-title">🏷️ 類別編碼 <span class="feature-cat-count">4</span></div><div class="feature-cat-list">入學方式、學制、系所、學生身分別</div></div>
+        <div class="feature-cat"><div class="feature-cat-title">📚 學業成績 <span class="feature-cat-count">8</span></div><div class="feature-cat-list">平均_最大、平均_最小、平均_變化、平均_最初、平均_S1～S4</div></div>
+        <div class="feature-cat"><div class="feature-cat-title">🚪 出勤總量 <span class="feature-cat-count">3</span></div><div class="feature-cat-list">總曠課、總缺曠、總請假</div></div>
+        <div class="feature-cat"><div class="feature-cat-title">⏱ 出勤動態 <span class="feature-cat-count">7</span></div><div class="feature-cat-list">曠課_最大/變化/最初、缺曠_最大/變化、請假_最大/變化</div></div>
+        <div class="feature-cat"><div class="feature-cat-title">📊 出勤比率 <span class="feature-cat-count">2</span></div><div class="feature-cat-list">缺曠率、曠課佔比</div></div>
+        <div class="feature-cat"><div class="feature-cat-title">📅 各學期出勤 <span class="feature-cat-count">12</span></div><div class="feature-cat-list">曠課_S1～S4、缺曠_S1～S4、請假_S1～S4</div></div>
+        <div class="feature-cat"><div class="feature-cat-title">📉 後期惡化率 <span class="feature-cat-count">1</span></div><div class="feature-cat-list">後期惡化率（S3–S4 / S1–S2 曠課量比，反映惡化趨勢）</div></div>
+        <div class="feature-cat"><div class="feature-cat-title">⭐ 獎懲 <span class="feature-cat-count">1</span></div><div class="feature-cat-list">功過淨值（大功×9＋小功×3＋嘉獎 − 大過×9 − 小過×3 − 申誡）</div></div>
+        <div class="feature-cat"><div class="feature-cat-title">💰 補助 <span class="feature-cat-count">13</span></div><div class="feature-cat-list">12 種補助旗標（清寒、低收入、教育部弱勢生活、餐食、就學貸款、急難救助、原民會、圓夢起飛、學習就業輔導、愛舍服務、學雜費減免、精進學習）＋ 補助項目數</div></div>
+        <div class="feature-cat"><div class="feature-cat-title">🎯 社團/幹部 視窗統計 <span class="feature-cat-count">8</span></div><div class="feature-cat-list">視窗內_曾參與社團/擔任幹部/擔任社員/擔任社長＋各自學期數</div></div>
+        <div class="feature-cat"><div class="feature-cat-title">📌 社團/幹部 各學期 <span class="feature-cat-count">16</span></div><div class="feature-cat-list">社團_S1～S4、幹部_S1～S4、社員_S1～S4、社長_S1～S4</div></div>
+      </div>
+    </div>
     <div class="upload-card">
       <div class="upload-zone" id="upload-zone-model">
         <div class="upload-icon">🤖</div>
@@ -240,7 +271,38 @@ tbody tr.data-row.expanded td{background:var(--blue-light)}
 
   <!-- 分頁三：休退學預警 -->
   <div id="tab-dropout" class="tab-content">
-    <div class="model-info-dropout">⚠️ <b>休退學風險預警模型 v4</b>：使用 XGBoost，僅以 <b>S1-S2 早期 59 個特徵</b>（含平均成績、12 種補助、社團/幹部/社員/社長等）預測學生未來休學或退學的機率（資料中休退學佔 10.7%，已採用 <code>scale_pos_weight</code> 處理類別不平衡）。提供 <b>學務處於 S2 結束前進行早期介入</b>。<br>v4 表現：5 折交叉驗證 ROC-AUC <b>85%</b>、Precision <b>61%</b>、F1 <b>60%</b>。所有計算在您的電腦本機進行，資料不會上傳至任何伺服器。</div>
+    <div class="model-info-dropout"><div style="line-height:1.8">
+<b>⚠️ 休退學風險預警模型 v5</b>（XGBoost）<br>
+<b>📌 預測目標</b>：學生未來是否會 <b>休學或退學</b>，提供 <b>學務處於 S2 結束前進行早期介入</b>。<br>
+<b>📊 預測機率</b>：模型對每位學生輸出 0–1 之間的 <b>條件機率</b>，代表「該生未來休退學的可能性」；依此機率由高至低排序。<br>
+<b>🚦 風險分級依據</b>：<br>
+&nbsp;&nbsp;🔴 高風險（機率 &gt; 80%）：建議優先進行生活關懷與面談<br>
+&nbsp;&nbsp;🟡 中風險（機率 50%–80%）：持續觀察與適度關懷<br>
+&nbsp;&nbsp;🟢 低風險（機率 ≤ 50%）：定期追蹤即可<br>
+<b>⏱ 特徵時間窗口</b>：本模型所有特徵 <b>僅取自前 2 學期（S1–S2）</b>，符合「資料中退學人數於 S3 暴增 10 倍」的學則時點分析；不使用 S3 之後資料以確保預測在介入時點前產出。<br>
+<b>⚖️ 合規說明</b>：依《性別平等教育法》考量，本版本已 <b>移除「性別」特徵</b>。<br>
+<b>📊 類別不平衡處理</b>：資料中休退學僅佔 10.7%，已採用 <code>scale_pos_weight ≈ 8.32</code> 加權，使模型更願意辨識少數類別。<br>
+<b>📈 v5 表現</b>：5 折交叉驗證待重訓後更新（v4 為 ROC-AUC 84.6%、Recall 59.2%、F1 59.9%）。<br>
+<b>🔒 隱私</b>：所有計算在您的瀏覽器本機完成，資料不會上傳至任何伺服器。
+</div></div>
+    <div class="feature-list-panel">
+      <div class="feature-list-header" onclick="toggleFL('drop')">
+        <span>📋 <b>使用特徵清單</b>（休退學模型共 <b>58</b> 個特徵，時間窗口 S1–S2）</span>
+        <span class="chevron" id="chev-fl-drop">▼</span>
+      </div>
+      <div class="feature-list-body" id="body-fl-drop">
+        <div class="feature-cat"><div class="feature-cat-title">🏷️ 類別編碼 <span class="feature-cat-count">4</span></div><div class="feature-cat-list">入學方式、學制、系所、學生身分別</div></div>
+        <div class="feature-cat"><div class="feature-cat-title">📚 學業成績 <span class="feature-cat-count">6</span></div><div class="feature-cat-list">平均_最大、平均_最小、平均_變化、平均_最初、平均_S1、平均_S2</div></div>
+        <div class="feature-cat"><div class="feature-cat-title">🚪 出勤總量 <span class="feature-cat-count">3</span></div><div class="feature-cat-list">總曠課、總缺曠、總請假</div></div>
+        <div class="feature-cat"><div class="feature-cat-title">⏱ 出勤動態 <span class="feature-cat-count">7</span></div><div class="feature-cat-list">曠課_最大/變化/最初、缺曠_最大/變化、請假_最大/變化</div></div>
+        <div class="feature-cat"><div class="feature-cat-title">📊 出勤比率 <span class="feature-cat-count">2</span></div><div class="feature-cat-list">缺曠率、曠課佔比</div></div>
+        <div class="feature-cat"><div class="feature-cat-title">📅 各學期出勤 <span class="feature-cat-count">6</span></div><div class="feature-cat-list">曠課_S1～S2、缺曠_S1～S2、請假_S1～S2</div></div>
+        <div class="feature-cat"><div class="feature-cat-title">⭐ 獎懲 <span class="feature-cat-count">1</span></div><div class="feature-cat-list">功過淨值（大功×9＋小功×3＋嘉獎 − 大過×9 − 小過×3 − 申誡）</div></div>
+        <div class="feature-cat"><div class="feature-cat-title">💰 補助 <span class="feature-cat-count">13</span></div><div class="feature-cat-list">12 種補助旗標（清寒、低收入、教育部弱勢生活、餐食、就學貸款、急難救助、原民會、圓夢起飛、學習就業輔導、愛舍服務、學雜費減免、精進學習）＋ 補助項目數</div></div>
+        <div class="feature-cat"><div class="feature-cat-title">🎯 社團/幹部 視窗統計 <span class="feature-cat-count">8</span></div><div class="feature-cat-list">視窗內_曾參與社團/擔任幹部/擔任社員/擔任社長＋各自學期數</div></div>
+        <div class="feature-cat"><div class="feature-cat-title">📌 社團/幹部 各學期 <span class="feature-cat-count">8</span></div><div class="feature-cat-list">社團_S1～S2、幹部_S1～S2、社員_S1～S2、社長_S1～S2</div></div>
+      </div>
+    </div>
     <div class="upload-card">
       <div class="upload-zone" id="upload-zone-dropout">
         <div class="upload-icon">⚠️</div>
@@ -378,7 +440,7 @@ function buildPerfFeatures(row,h){
   const 後期惡化率=前===0?0:後/前;
   const 補旗=_subFlags(row,h);const 補數=補旗.reduce((a,b)=>a+b,0);
   return[
-    row['性別_編碼']||0,row['入學方式_編碼']||0,row['學制_編碼']||0,row['系所_編碼']||0,row['學生身分別_編碼']||0,
+    row['入學方式_編碼']||0,row['學制_編碼']||0,row['系所_編碼']||0,row['學生身分別_編碼']||0,
     平均_max,平均_min,平均_last-平均_first,平均_first,
     _s(row,平c,0),_s(row,平c,1),_s(row,平c,2),_s(row,平c,3),
     總曠,總缺,總假,功,
@@ -416,7 +478,7 @@ function buildEarlyFeatures(row,h){
   const 功=(_sum(row,大fc)*9+_sum(row,小fc)*3+_sum(row,嘉c))-(_sum(row,大oc)*9+_sum(row,小oc)*3+_sum(row,申c));
   const 補旗=_subFlags(row,h);const 補數=補旗.reduce((a,b)=>a+b,0);
   return[
-    row['性別_編碼']||0,row['入學方式_編碼']||0,row['學制_編碼']||0,row['系所_編碼']||0,row['學生身分別_編碼']||0,
+    row['入學方式_編碼']||0,row['學制_編碼']||0,row['系所_編碼']||0,row['學生身分別_編碼']||0,
     平均_max,平均_min,平均_last-平均_first,平均_first,
     _s(row,平c,0),_s(row,平c,1),
     總曠,總缺,總假,功,
@@ -470,7 +532,6 @@ async function runOnnxInference(raw,h,sess,featBuilder,featCount,encoders,setPro
       return 0;
     };
     return{...r,
-      '性別_編碼':lookup('性別','性別'),
       '入學方式_編碼':lookup('入學方式','入學方式'),
       '學制_編碼':lookup('學制','學制'),
       '系所_編碼':lookup('系所名稱','系所'),
@@ -645,6 +706,7 @@ function renderCharts(data,chartsObj,featImp,probId,deptId,yearId,featId,palette
 function toggleSec(k){const b=document.getElementById('body-'+k),c=document.getElementById('chev-'+k),o=b.style.display!=='none';b.style.display=o?'none':'';c.classList.toggle('open',!o);}
 function toggleMod(k){const b=document.getElementById('body-'+k),c=document.getElementById('chev-'+k),o=b.style.display!=='none';b.style.display=o?'none':'';c.classList.toggle('open',!o);}
 function toggleDrop(k){const b=document.getElementById('body-'+k),c=document.getElementById('chev-'+k),o=b.style.display!=='none';b.style.display=o?'none':'';c.classList.toggle('open',!o);}
+function toggleFL(k){const b=document.getElementById('body-fl-'+k),c=document.getElementById('chev-fl-'+k);b.classList.toggle('open');c.classList.toggle('open');}
 function showL(t){document.getElementById('loading').classList.add('show');document.getElementById('loading-text').textContent=t;}
 function hideL(){document.getElementById('loading').classList.remove('show');}
 function setP(tp,p,t){document.getElementById(`progress-wrap-${tp}`).style.display='block';document.getElementById(`progress-fill-${tp}`).style.width=p+'%';document.getElementById(`progress-text-${tp}`).textContent=t;document.getElementById('loading-text').textContent=t;}
