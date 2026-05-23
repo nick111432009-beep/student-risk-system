@@ -176,7 +176,7 @@ tbody td{font-size:13px;padding:12px 16px;border-top:1px solid var(--border);whi
       <b>🤖 學習成效預測模型 v7-fs</b>（XGBoost，合規版：移除性別特徵，v7-fs 特徵選擇後）<br>
       <b>📌 預測目標</b>：學生最終學習成效是否落於 <b>班級後 20%</b>，作為 <b>教務處課業輔導</b> 之依據。<br>
       <b>🚦 風險分級</b>：
-      🔴 高風險（學習落後機率 &gt; 58%）優先安排補救教學｜
+      🔴 高風險（學習落後機率 &gt; 65%）優先安排補救教學｜
       🟡 中風險（40%–58%）持續觀察｜
       🟢 低風險（≤40%）定期追蹤<br>
       <b>📌 機率說明</b>：顯示的「預測機率」為<b>學習落後風險機率</b>，數值越高代表越可能落入班級後 20%。<br>
@@ -241,7 +241,7 @@ tbody td{font-size:13px;padding:12px 16px;border-top:1px solid var(--border);whi
         <div class="filter-label">風險等級篩選</div>
         <div class="status-btns" id="pred-btns-perf">
           <button class="status-btn active" data-pred="all">全部</button>
-          <button class="status-btn" data-pred="high">🔴 高風險（落後機率 &gt;58%）</button>
+          <button class="status-btn" data-pred="high">🔴 高風險（落後機率 &gt;65%）</button>
           <button class="status-btn" data-pred="mid">🟡 中風險（40%–58%）</button>
           <button class="status-btn" data-pred="low">🟢 低風險（≤40%）</button>
         </div>
@@ -262,9 +262,9 @@ tbody td{font-size:13px;padding:12px 16px;border-top:1px solid var(--border);whi
     <div id="result-perf" style="display:none">
       <div class="warn-banner" id="warn-perf"></div>
       <div class="metrics-grid">
-        <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-red"></span>高風險（落後機率 &gt;58%）</div><div class="metric-num" id="cnt-perf-high">0</div><div class="metric-sub">人</div></div>
-        <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-amber"></span>中風險（40%–58%）</div><div class="metric-num" id="cnt-perf-mid">0</div><div class="metric-sub">人</div></div>
-        <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-green"></span>低風險（≤40%）</div><div class="metric-num" id="cnt-perf-low">0</div><div class="metric-sub">人</div></div>
+        <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-red"></span>高風險（落後機率 &gt;65%）</div><div class="metric-num" id="cnt-perf-high">0</div><div class="metric-sub">人</div></div>
+        <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-amber"></span>中風險（36%–65%）</div><div class="metric-num" id="cnt-perf-mid">0</div><div class="metric-sub">人</div></div>
+        <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-green"></span>低風險（≤36%）</div><div class="metric-num" id="cnt-perf-low">0</div><div class="metric-sub">人</div></div>
         <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-gray"></span>總計</div><div class="metric-num" id="cnt-perf-total">0</div><div class="metric-sub">人</div></div>
       </div>
       <div class="charts-grid">
@@ -380,7 +380,7 @@ tbody td{font-size:13px;padding:12px 16px;border-top:1px solid var(--border);whi
       <div class="metrics-grid">
         <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-red"></span>高風險（&gt;75%）</div><div class="metric-num" id="cnt-drop-high">0</div><div class="metric-sub">人</div></div>
         <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-amber"></span>中風險（40%–75%）</div><div class="metric-num" id="cnt-drop-mid">0</div><div class="metric-sub">人</div></div>
-        <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-green"></span>低風險（≤40%）</div><div class="metric-num" id="cnt-drop-low">0</div><div class="metric-sub">人</div></div>
+        <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-green"></span>低風險（≤36%）</div><div class="metric-num" id="cnt-drop-low">0</div><div class="metric-sub">人</div></div>
         <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-gray"></span>總計</div><div class="metric-num" id="cnt-drop-total">0</div><div class="metric-sub">人</div></div>
       </div>
       <div class="charts-grid">
@@ -438,16 +438,16 @@ function _fv(row,c){for(const x of c){const v=nv(row,x);if(v!==null)return v;}re
 function _lv(row,c){for(let i=c.length-1;i>=0;i--){const v=nv(row,c[i]);if(v!==null)return v;}return 0;}
 function _s(row,c,i){return i<c.length?(nv(row,c[i])||0):0;}
 function _subFlags(row,h){return 弱勢補助關鍵字.map(kw=>getCols(h,kw).some(x=>bv(row,x))?1:0);}
-// 模型一：休退學 — 高機率=高風險（正向）  門檻：>0.75 高 / >0.40 中
+// 模型一：休退學 — 高機率=高風險（正向）  門檻：>0.75 高 / >0.40 中（F1最佳@0.48）
 function getDropRisk(riskProb){
   if(riskProb>0.75)return{level:'高風險',tag:'tag-red',barColor:'#ef4444'};
   if(riskProb>0.40)return{level:'中風險',tag:'tag-amber',barColor:'#f59e0b'};
   return{level:'低風險',tag:'tag-green',barColor:'#22c55e'};
 }
-// 模型二：學習成效 — 高機率=表現好=低風險（反向，已取 1-prob 儲存）門檻：>0.58 高 / >0.40 中
+// 模型二：學習成效 — 高機率=落後風險高（後20%落後生，直接輸出）門檻：>0.65 高 / >0.36 中
 function getPerfRisk(riskProb){
-  if(riskProb>0.58)return{level:'高風險',tag:'tag-red',barColor:'#ef4444'};
-  if(riskProb>0.40)return{level:'中風險',tag:'tag-amber',barColor:'#f59e0b'};
+  if(riskProb>0.65)return{level:'高風險',tag:'tag-red',barColor:'#ef4444'};
+  if(riskProb>0.36)return{level:'中風險',tag:'tag-amber',barColor:'#f59e0b'};
   return{level:'低風險',tag:'tag-green',barColor:'#22c55e'};
 }
 function getRiskLevel(riskProb,tp){return tp==='perf'?getPerfRisk(riskProb):getDropRisk(riskProb);}
