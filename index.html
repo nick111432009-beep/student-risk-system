@@ -176,14 +176,16 @@ tbody td{font-size:13px;padding:12px 16px;border-top:1px solid var(--border);whi
       <b>🤖 學習成效預測模型 v7-fs</b>（XGBoost，合規版：移除性別特徵，v7-fs 特徵選擇後）<br>
       <b>📌 預測目標</b>：學生最終學習成效是否落於 <b>班級後 20%</b>，作為 <b>教務處課業輔導</b> 之依據。<br>
       <b>🚦 風險分級</b>：
-      🔴 高風險（學習落後機率 &gt; 75%）優先安排補救教學｜
+      🔴 高風險（模型分數 &gt; 75%）優先安排補救教學｜
       🟡 中風險（42%–75%）持續觀察｜
       🟢 低風險（≤42%）定期追蹤<br>
-      <b>📌 機率說明</b>：顯示的「預測機率」為<b>學習落後風險機率</b>（班級百分比 &gt; 80），數值越高代表越可能落入班級後 20%。<br>
+      <b>📌 分數說明</b>：顯示的「風險分數」為模型輸出之落後風險機率（班級百分比 &gt; 80），數值越高代表越可能落入班級後 20%。<br>
       <b>🎓 適用對象</b>：建議用於 <b>已完成 S4（入學滿 2 年）</b>的學生，即 100–111 學年。對 112、113 學年等資料尚不完整的學生，預測結果請參考即可。<br>
       <b>⏱ 特徵時間窗口</b>：僅取自前 4 學期（S1–S4），67 個特徵，不使用 S5 以後資料。<br>
       <b>📈 v7-fs 表現</b>：Accuracy 91.4%、ROC-AUC 96.1%、Recall 74.5%、Precision 79.9%、F1 77.1%（5 折交叉驗證）。<br>
-      <b>🔒 隱私</b>：所有計算在您的瀏覽器本機完成，不會上傳至任何伺服器。
+      <b>🔒 隱私</b>：所有計算在您的瀏覽器本機完成，不會上傳至任何伺服器。<br>
+      <b>🎯 高風險門檻設計理念</b>：本研究將高風險門檻設定於模型分數 75% 以上，以降低誤報率，避免學務輔導資源過度分散，使高風險名單更具實際介入價值。<br>
+      <b>⚠️ 模型限制</b>：本模型主要依據學生學業、修課與出缺席資料進行預測，部分學習落後行為可能涉及心理、家庭、健康、經濟或生涯規劃等非校務因素，預測結果僅供預警與輔導參考。
     </div>
 
     <div class="feature-list-panel">
@@ -241,7 +243,7 @@ tbody td{font-size:13px;padding:12px 16px;border-top:1px solid var(--border);whi
         <div class="filter-label">風險等級篩選</div>
         <div class="status-btns" id="pred-btns-perf">
           <button class="status-btn active" data-pred="all">全部</button>
-          <button class="status-btn" data-pred="high">🔴 高風險（落後機率 &gt;75%）</button>
+          <button class="status-btn" data-pred="high">🔴 高風險（模型分數 &gt;75%）</button>
           <button class="status-btn" data-pred="mid">🟡 中風險（42%–75%）</button>
           <button class="status-btn" data-pred="low">🟢 低風險（≤42%）</button>
         </div>
@@ -262,28 +264,28 @@ tbody td{font-size:13px;padding:12px 16px;border-top:1px solid var(--border);whi
     <div id="result-perf" style="display:none">
       <div class="warn-banner" id="warn-perf"></div>
       <div class="metrics-grid">
-        <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-red"></span>高風險（落後機率 &gt;75%）</div><div class="metric-num" id="cnt-perf-high">0</div><div class="metric-sub">人</div></div>
+        <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-red"></span>高風險（模型分數 &gt;75%）</div><div class="metric-num" id="cnt-perf-high">0</div><div class="metric-sub">人</div></div>
         <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-amber"></span>中風險（42%–75%）</div><div class="metric-num" id="cnt-perf-mid">0</div><div class="metric-sub">人</div></div>
         <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-green"></span>低風險（≤42%）</div><div class="metric-num" id="cnt-perf-low">0</div><div class="metric-sub">人</div></div>
         <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-gray"></span>總計</div><div class="metric-num" id="cnt-perf-total">0</div><div class="metric-sub">人</div></div>
       </div>
       <div class="charts-grid">
-        <div class="chart-card"><div class="chart-card-title">📊 預測機率分布</div><div class="chart-container"><canvas id="chart-perf-prob"></canvas></div></div>
+        <div class="chart-card"><div class="chart-card-title">📊 風險分數分布</div><div class="chart-container"><canvas id="chart-perf-prob"></canvas></div></div>
         <div class="chart-card"><div class="chart-card-title">🏫 各系所高風險比例</div><div class="chart-container"><canvas id="chart-perf-dept"></canvas></div></div>
         <div class="chart-card"><div class="chart-card-title">📈 各入學學年高風險比例</div><div class="chart-container"><canvas id="chart-perf-year"></canvas></div></div>
         <div class="chart-card"><div class="chart-card-title">🔍 特徵重要性（前10名）</div><div class="chart-container"><canvas id="chart-perf-feat"></canvas></div></div>
       </div>
       <div class="risk-section">
         <div class="risk-header" onclick="toggleSec('perf-high')"><div class="risk-header-left"><span class="risk-badge badge-red">🔴 高風險</span><span class="risk-count" id="lbl-perf-high">0 人</span></div><span class="chevron open" id="chev-perf-high">▼</span></div>
-        <div id="body-perf-high"><div class="table-wrap"><table><thead><tr><th>學生識別碼</th><th>系所名稱</th><th>入學學年</th><th>學籍</th><th>風險等級</th><th>落後風險機率</th></tr></thead><tbody id="rows-perf-high"></tbody></table></div></div>
+        <div id="body-perf-high"><div class="table-wrap"><table><thead><tr><th>學生識別碼</th><th>系所名稱</th><th>入學學年</th><th>學籍</th><th>風險等級</th><th>風險分數</th></tr></thead><tbody id="rows-perf-high"></tbody></table></div></div>
       </div>
       <div class="risk-section">
         <div class="risk-header" onclick="toggleSec('perf-mid')"><div class="risk-header-left"><span class="risk-badge badge-amber">🟡 中風險</span><span class="risk-count" id="lbl-perf-mid">0 人</span></div><span class="chevron" id="chev-perf-mid">▼</span></div>
-        <div id="body-perf-mid" style="display:none"><div class="table-wrap"><table><thead><tr><th>學生識別碼</th><th>系所名稱</th><th>入學學年</th><th>學籍</th><th>風險等級</th><th>落後風險機率</th></tr></thead><tbody id="rows-perf-mid"></tbody></table></div></div>
+        <div id="body-perf-mid" style="display:none"><div class="table-wrap"><table><thead><tr><th>學生識別碼</th><th>系所名稱</th><th>入學學年</th><th>學籍</th><th>風險等級</th><th>風險分數</th></tr></thead><tbody id="rows-perf-mid"></tbody></table></div></div>
       </div>
       <div class="risk-section">
         <div class="risk-header" onclick="toggleSec('perf-low')"><div class="risk-header-left"><span class="risk-badge badge-green">🟢 低風險</span><span class="risk-count" id="lbl-perf-low">0 人</span></div><span class="chevron" id="chev-perf-low">▼</span></div>
-        <div id="body-perf-low" style="display:none"><div class="table-wrap"><table><thead><tr><th>學生識別碼</th><th>系所名稱</th><th>入學學年</th><th>學籍</th><th>風險等級</th><th>落後風險機率</th></tr></thead><tbody id="rows-perf-low"></tbody></table></div></div>
+        <div id="body-perf-low" style="display:none"><div class="table-wrap"><table><thead><tr><th>學生識別碼</th><th>系所名稱</th><th>入學學年</th><th>學籍</th><th>風險等級</th><th>風險分數</th></tr></thead><tbody id="rows-perf-low"></tbody></table></div></div>
       </div>
       <div class="action-bar"><button class="dl-btn" onclick="downloadResults('perf')">⬇ 下載預測結果</button></div>
     </div>
@@ -293,15 +295,17 @@ tbody td{font-size:13px;padding:12px 16px;border-top:1px solid var(--border);whi
   <div id="tab-drop" class="tab-content">
     <div class="model-info-red">
       <b>⚠️ 休退學風險預警模型 v7-fs</b>（XGBoost，合規版：移除性別特徵，v7-fs 特徵選擇後）<br>
-      <b>📌 預測目標</b>：學生未來是否會 <b>休學或退學</b>，提供 <b>學務處於 S2 結束前進行早期介入</b>。<br>
+      <b>📌 預測目標</b>：學生未來是否會 <b>休學或退學</b>，提供 <b>學務處於 S2 結束前作為早期預警與輔導參考</b>。<br>
       <b>🚦 風險分級</b>：
-      🔴 高風險（休退學機率 &gt; 75%）優先生活關懷與面談｜
+      🔴 高風險（模型分數 &gt; 75%）優先生活關懷與面談｜
       🟡 中風險（40%–75%）持續觀察｜
       🟢 低風險（≤42%）定期追蹤<br>
       <b>⏱ 特徵時間窗口</b>：僅取自前 2 學期（S1–S2），38 個特徵，不使用 S3 之後資料，確保預測在介入時點前產出。<br>
       <b>📊 類別不平衡處理</b>：採用 SMOTE 過採樣（A 組設定，strategy=0.5）。<br>
       <b>📈 v7-fs 表現</b>：Accuracy 94.1%、ROC-AUC 89.0%、Recall 60.2%、Precision 80.3%、F1 68.9%（5 折交叉驗證）。<br>
-      <b>🔒 隱私</b>：所有計算在您的瀏覽器本機完成，不會上傳至任何伺服器。
+      <b>🔒 隱私</b>：所有計算在您的瀏覽器本機完成，不會上傳至任何伺服器。<br>
+      <b>🎯 高風險門檻設計理念</b>：本研究將高風險門檻設定於模型分數 75% 以上，以降低誤報率，避免學務輔導資源過度分散，使高風險名單更具實際介入價值。<br>
+      <b>⚠️ 模型限制</b>：本模型主要依據學生學業、修課與出缺席資料進行預測，部分休退學行為可能涉及心理、家庭、健康、經濟或生涯規劃等非校務因素，預測結果僅供預警與輔導參考。
     </div>
 
     <div class="feature-list-panel">
@@ -384,22 +388,22 @@ tbody td{font-size:13px;padding:12px 16px;border-top:1px solid var(--border);whi
         <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-gray"></span>總計</div><div class="metric-num" id="cnt-drop-total">0</div><div class="metric-sub">人</div></div>
       </div>
       <div class="charts-grid">
-        <div class="chart-card"><div class="chart-card-title">📊 預測機率分布</div><div class="chart-container"><canvas id="chart-drop-prob"></canvas></div></div>
+        <div class="chart-card"><div class="chart-card-title">📊 風險分數分布</div><div class="chart-container"><canvas id="chart-drop-prob"></canvas></div></div>
         <div class="chart-card"><div class="chart-card-title">🏫 各系所高風險比例</div><div class="chart-container"><canvas id="chart-drop-dept"></canvas></div></div>
         <div class="chart-card"><div class="chart-card-title">📈 各入學學年高風險比例</div><div class="chart-container"><canvas id="chart-drop-year"></canvas></div></div>
         <div class="chart-card"><div class="chart-card-title">🔍 特徵重要性（前10名）</div><div class="chart-container"><canvas id="chart-drop-feat"></canvas></div></div>
       </div>
       <div class="risk-section">
         <div class="risk-header" onclick="toggleSec('drop-high')"><div class="risk-header-left"><span class="risk-badge badge-red">🔴 高風險</span><span class="risk-count" id="lbl-drop-high">0 人</span></div><span class="chevron open" id="chev-drop-high">▼</span></div>
-        <div id="body-drop-high"><div class="table-wrap"><table><thead><tr><th>學生識別碼</th><th>系所名稱</th><th>入學學年</th><th>學籍</th><th>風險等級</th><th>預測機率</th></tr></thead><tbody id="rows-drop-high"></tbody></table></div></div>
+        <div id="body-drop-high"><div class="table-wrap"><table><thead><tr><th>學生識別碼</th><th>系所名稱</th><th>入學學年</th><th>學籍</th><th>風險等級</th><th>風險分數</th></tr></thead><tbody id="rows-drop-high"></tbody></table></div></div>
       </div>
       <div class="risk-section">
         <div class="risk-header" onclick="toggleSec('drop-mid')"><div class="risk-header-left"><span class="risk-badge badge-amber">🟡 中風險</span><span class="risk-count" id="lbl-drop-mid">0 人</span></div><span class="chevron" id="chev-drop-mid">▼</span></div>
-        <div id="body-drop-mid" style="display:none"><div class="table-wrap"><table><thead><tr><th>學生識別碼</th><th>系所名稱</th><th>入學學年</th><th>學籍</th><th>風險等級</th><th>預測機率</th></tr></thead><tbody id="rows-drop-mid"></tbody></table></div></div>
+        <div id="body-drop-mid" style="display:none"><div class="table-wrap"><table><thead><tr><th>學生識別碼</th><th>系所名稱</th><th>入學學年</th><th>學籍</th><th>風險等級</th><th>風險分數</th></tr></thead><tbody id="rows-drop-mid"></tbody></table></div></div>
       </div>
       <div class="risk-section">
         <div class="risk-header" onclick="toggleSec('drop-low')"><div class="risk-header-left"><span class="risk-badge badge-green">🟢 低風險</span><span class="risk-count" id="lbl-drop-low">0 人</span></div><span class="chevron" id="chev-drop-low">▼</span></div>
-        <div id="body-drop-low" style="display:none"><div class="table-wrap"><table><thead><tr><th>學生識別碼</th><th>系所名稱</th><th>入學學年</th><th>學籍</th><th>風險等級</th><th>預測機率</th></tr></thead><tbody id="rows-drop-low"></tbody></table></div></div>
+        <div id="body-drop-low" style="display:none"><div class="table-wrap"><table><thead><tr><th>學生識別碼</th><th>系所名稱</th><th>入學學年</th><th>學籍</th><th>風險等級</th><th>風險分數</th></tr></thead><tbody id="rows-drop-low"></tbody></table></div></div>
       </div>
       <div class="action-bar"><button class="dl-btn" onclick="downloadResults('drop')">⬇ 下載預警名單</button></div>
     </div>
@@ -890,7 +894,7 @@ function downloadResults(tp){
     {說明:'CV 表現',內容:isPerf?'ROC-AUC 96.1%、Recall 74.5%、F1 77.1%':'ROC-AUC 89.0%、Recall 60.2%、F1 68.9%'},
     {說明:'高風險人數',內容:hi},{說明:'中風險人數',內容:mi},{說明:'低風險人數',內容:lo},{說明:'總計',內容:f.length},{說明:'',內容:''}
   ];
-  const dataRows=f.map(d=>({學生識別碼:d.學生識別碼,系所名稱:d.系所名稱,入學學年:d.入學學年,最終學籍狀況:d.最終學籍狀況,風險等級:d.風險等級,預測機率:(d.預測機率*100).toFixed(2)+'%'}));
+  const dataRows=f.map(d=>({學生識別碼:d.學生識別碼,系所名稱:d.系所名稱,入學學年:d.入學學年,最終學籍狀況:d.最終學籍狀況,風險等級:d.風險等級,風險分數:(d.預測機率*100).toFixed(2)+'%'}));
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(summaryRows),'摘要');
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(dataRows),isPerf?'預測結果':'預警名單');
