@@ -179,7 +179,7 @@ tbody td{font-size:13px;padding:12px 16px;border-top:1px solid var(--border);whi
       🔴 高風險（學習落後機率 &gt; 58%）優先安排補救教學｜
       🟡 中風險（40%–58%）持續觀察｜
       🟢 低風險（≤40%）定期追蹤<br>
-      <b>📌 機率說明</b>：顯示的「預測機率」為<b>學習落後風險機率</b>（模型原始輸出已取反），數值越高代表越可能落入班級後 20%。<br>
+      <b>📌 機率說明</b>：顯示的「預測機率」為<b>學習落後風險機率</b>，數值越高代表越可能落入班級後 20%。<br>
       <b>🎓 適用對象</b>：建議用於 <b>已完成 S4（入學滿 2 年）</b>的學生，即 100–111 學年。對 112、113 學年等資料尚不完整的學生，預測結果請參考即可。<br>
       <b>⏱ 特徵時間窗口</b>：僅取自前 4 學期（S1–S4），67 個特徵，不使用 S5 以後資料。<br>
       <b>📈 v7-fs 表現</b>：Accuracy 91.4%、ROC-AUC 96.1%、Recall 74.5%、Precision 79.9%、F1 77.1%（5 折交叉驗證）。<br>
@@ -713,8 +713,8 @@ async function runInference(raw,h,tp){
     const probs=extractProb(probOut,batch.length);
     batch.forEach((r,j)=>{
       const rawProb=Math.max(0,Math.min(1,Number(probs[j])||0));
-      // 模型二（perf）高機率=表現好=低風險，取反為「落後風險機率」再分級
-      const riskProb=tp==='perf'?(1-rawProb):rawProb;
+      // 模型二（perf）高機率=落後風險高（直接輸出後20%落後機率，無需取反）
+      const riskProb=rawProb;
       const risk=getRiskLevel(riskProb,tp);
       results.push({
         學生識別碼:r['學生識別碼']||'',系所名稱:r['系所名稱']||'',
@@ -923,34 +923,4 @@ function resetTab(tp){
   document.getElementById('file-input-'+tp).value='';
   document.querySelectorAll('#pred-btns-'+tp+' .status-btn').forEach(b=>b.classList.toggle('active',b.dataset.pred==='all'));
   Object.keys(s.charts).forEach(k=>{if(s.charts[k]){s.charts[k].destroy();s.charts[k]=null;}});
-  document.getElementById('header-dl-btn').style.display='none';
-}
-
-function toggleSec(k){
-  const b=document.getElementById('body-'+k),c=document.getElementById('chev-'+k);
-  const o=b.style.display!=='none';b.style.display=o?'none':'';c.classList.toggle('open',!o);
-}
-function toggleFL(k){
-  document.getElementById('body-fl-'+k).classList.toggle('open');
-  document.getElementById('chev-fl-'+k).classList.toggle('open');
-}
-
-function onDragOver(e,tp){e.preventDefault();document.getElementById('upload-zone-'+tp).classList.add('dragover');}
-function onDragLeave(tp){document.getElementById('upload-zone-'+tp).classList.remove('dragover');}
-function onDrop(e,tp){e.preventDefault();document.getElementById('upload-zone-'+tp).classList.remove('dragover');const f=e.dataTransfer.files[0];if(f)processFile(f,tp);}
-function onFileChange(e,tp){if(e.target.files[0])processFile(e.target.files[0],tp);}
-
-// 篩選器按鈕事件
-['perf','drop'].forEach(tp=>{
-  document.querySelectorAll('#pred-btns-'+tp+' .status-btn').forEach(b=>{
-    b.addEventListener('click',()=>{
-      document.querySelectorAll('#pred-btns-'+tp+' .status-btn').forEach(x=>x.classList.remove('active'));
-      b.classList.add('active');
-      state[tp].selPred=b.dataset.pred;
-      updateResults(tp);
-    });
-  });
-});
-</script>
-</body>
-</html>
+  document.getElementById('header-dl-btn').sty
