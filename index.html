@@ -267,15 +267,15 @@ tbody td{font-size:13px;padding:12px 16px;border-top:1px solid var(--border);whi
         <div class="chart-card"><div class="chart-card-title">🔍 特徵重要性（前10名）</div><div class="chart-container"><canvas id="chart-perf-feat"></canvas></div></div>
       </div>
       <div class="risk-section">
-        <div class="risk-header" onclick="toggleSec('perf-high')"><div class="risk-header-left"><span class="risk-badge badge-red">🔴 高風險</span><span class="risk-count" id="lbl-perf-high">0 人</span></div><span class="chevron open" id="chev-perf-high">▼</span></div>
+        <div class="risk-header" onclick="toggleSec('perf-high')"><div class="risk-header-left"><span class="risk-badge badge-red">🔴 預警</span><span class="risk-count" id="lbl-perf-high">0 人</span></div><span class="chevron open" id="chev-perf-high">▼</span></div>
         <div id="body-perf-high"><div class="table-wrap"><table><thead><tr><th>學生識別碼</th><th>系所名稱</th><th>入學學年</th><th>學籍</th><th>風險等級</th><th>風險分數</th></tr></thead><tbody id="rows-perf-high"></tbody></table></div></div>
       </div>
       <div class="risk-section">
-        <div class="risk-header" onclick="toggleSec('perf-mid')"><div class="risk-header-left"><span class="risk-badge badge-amber">🟡 中風險</span><span class="risk-count" id="lbl-perf-mid">0 人</span></div><span class="chevron" id="chev-perf-mid">▼</span></div>
+        <div class="risk-header" onclick="toggleSec('perf-mid')"><div class="risk-header-left"><span class="risk-badge badge-amber">🟡 觀察（本版為空）</span><span class="risk-count" id="lbl-perf-mid">0 人</span></div><span class="chevron" id="chev-perf-mid">▼</span></div>
         <div id="body-perf-mid" style="display:none"><div class="table-wrap"><table><thead><tr><th>學生識別碼</th><th>系所名稱</th><th>入學學年</th><th>學籍</th><th>風險等級</th><th>風險分數</th></tr></thead><tbody id="rows-perf-mid"></tbody></table></div></div>
       </div>
       <div class="risk-section">
-        <div class="risk-header" onclick="toggleSec('perf-low')"><div class="risk-header-left"><span class="risk-badge badge-green">🟢 低風險</span><span class="risk-count" id="lbl-perf-low">0 人</span></div><span class="chevron" id="chev-perf-low">▼</span></div>
+        <div class="risk-header" onclick="toggleSec('perf-low')"><div class="risk-header-left"><span class="risk-badge badge-green">🟢 安全</span><span class="risk-count" id="lbl-perf-low">0 人</span></div><span class="chevron" id="chev-perf-low">▼</span></div>
         <div id="body-perf-low" style="display:none"><div class="table-wrap"><table><thead><tr><th>學生識別碼</th><th>系所名稱</th><th>入學學年</th><th>學籍</th><th>風險等級</th><th>風險分數</th></tr></thead><tbody id="rows-perf-low"></tbody></table></div></div>
       </div>
       <div class="action-bar"><button class="dl-btn" onclick="downloadResults('perf')">⬇ 下載預測結果</button></div>
@@ -378,15 +378,15 @@ tbody td{font-size:13px;padding:12px 16px;border-top:1px solid var(--border);whi
         <div class="chart-card"><div class="chart-card-title">🔍 特徵重要性（前10名）</div><div class="chart-container"><canvas id="chart-drop-feat"></canvas></div></div>
       </div>
       <div class="risk-section">
-        <div class="risk-header" onclick="toggleSec('drop-high')"><div class="risk-header-left"><span class="risk-badge badge-red">🔴 高風險</span><span class="risk-count" id="lbl-drop-high">0 人</span></div><span class="chevron open" id="chev-drop-high">▼</span></div>
+        <div class="risk-header" onclick="toggleSec('drop-high')"><div class="risk-header-left"><span class="risk-badge badge-red">🔴 預警</span><span class="risk-count" id="lbl-drop-high">0 人</span></div><span class="chevron open" id="chev-drop-high">▼</span></div>
         <div id="body-drop-high"><div class="table-wrap"><table><thead><tr><th>學生識別碼</th><th>系所名稱</th><th>入學學年</th><th>學籍</th><th>風險等級</th><th>風險分數</th></tr></thead><tbody id="rows-drop-high"></tbody></table></div></div>
       </div>
       <div class="risk-section">
-        <div class="risk-header" onclick="toggleSec('drop-mid')"><div class="risk-header-left"><span class="risk-badge badge-amber">🟡 中風險</span><span class="risk-count" id="lbl-drop-mid">0 人</span></div><span class="chevron" id="chev-drop-mid">▼</span></div>
+        <div class="risk-header" onclick="toggleSec('drop-mid')"><div class="risk-header-left"><span class="risk-badge badge-amber">🟡 觀察</span><span class="risk-count" id="lbl-drop-mid">0 人</span></div><span class="chevron" id="chev-drop-mid">▼</span></div>
         <div id="body-drop-mid" style="display:none"><div class="table-wrap"><table><thead><tr><th>學生識別碼</th><th>系所名稱</th><th>入學學年</th><th>學籍</th><th>風險等級</th><th>風險分數</th></tr></thead><tbody id="rows-drop-mid"></tbody></table></div></div>
       </div>
       <div class="risk-section">
-        <div class="risk-header" onclick="toggleSec('drop-low')"><div class="risk-header-left"><span class="risk-badge badge-green">🟢 低風險</span><span class="risk-count" id="lbl-drop-low">0 人</span></div><span class="chevron" id="chev-drop-low">▼</span></div>
+        <div class="risk-header" onclick="toggleSec('drop-low')"><div class="risk-header-left"><span class="risk-badge badge-green">🟢 安全</span><span class="risk-count" id="lbl-drop-low">0 人</span></div><span class="chevron" id="chev-drop-low">▼</span></div>
         <div id="body-drop-low" style="display:none"><div class="table-wrap"><table><thead><tr><th>學生識別碼</th><th>系所名稱</th><th>入學學年</th><th>學籍</th><th>風險等級</th><th>風險分數</th></tr></thead><tbody id="rows-drop-low"></tbody></table></div></div>
       </div>
       <div class="action-bar"><button class="dl-btn" onclick="downloadResults('drop')">⬇ 下載預警名單</button></div>
@@ -459,7 +459,6 @@ function _mx(row,c){return c.length?Math.max(...c.map(x=>nv(row,x)||0),0):0;}
 function _fv(row,c){for(const x of c){const v=nv(row,x);if(v!==null)return v;}return 0;}
 function _lv(row,c){for(let i=c.length-1;i>=0;i--){const v=nv(row,c[i]);if(v!==null)return v;}return 0;}
 function _s(row,c,i){return i<c.length?(nv(row,c[i])||0):0;}
-function _subFlags(row,h){return 弱勢補助關鍵字.map(kw=>getCols(h,kw).some(x=>bv(row,x))?1:0);}
 // 模型一 v9：預警 ≥0.25（OOF F2 部署門檻）/ 觀察 ≥0.15（Youden's J）
 function getDropRisk(riskProb){
   if(riskProb>=0.25)return{level:'高風險',tag:'tag-red',barColor:'#ef4444'};
@@ -851,12 +850,15 @@ function updateResults(tp){
 // ─── 表格渲染 ─────────────────────────────────────────────────
 function stg(s){const c=s==='在學'?'tag-green':s==='休學'||s==='退學'?'tag-amber':'tag-gray';return`<span class="tag ${c}">${s||'—'}</span>`;}
 
+const RISK_LABEL={'高風險':'預警','中風險':'觀察','低風險':'安全'};
+function riskLabel(lv){return RISK_LABEL[lv]||lv;}
+
 function renderTable(id,data){
   const tb=document.getElementById(id);tb.innerHTML='';
   data.forEach(d=>{
     const tr=document.createElement('tr');
     const p=(d.預測機率*100).toFixed(1);
-    tr.innerHTML=`<td>${d.學生識別碼}</td><td>${d.系所名稱}</td><td>${d.入學學年}</td><td>${stg(d.最終學籍狀況)}</td><td><span class="tag ${d.tag}">${d.風險等級}</span></td><td><div style="font-size:12px;margin-bottom:4px;font-weight:600;color:${d.barColor}">${p}%</div><div class="prob-bar"><div class="prob-fill" style="width:${p}%;background:${d.barColor}"></div></div></td>`;
+    tr.innerHTML=`<td>${d.學生識別碼}</td><td>${d.系所名稱}</td><td>${d.入學學年}</td><td>${stg(d.最終學籍狀況)}</td><td><span class="tag ${d.tag}">${riskLabel(d.風險等級)}</span></td><td><div style="font-size:12px;margin-bottom:4px;font-weight:600;color:${d.barColor}">${p}%</div><div class="prob-bar"><div class="prob-fill" style="width:${p}%;background:${d.barColor}"></div></div></td>`;
     tb.appendChild(tr);
   });
 }
@@ -917,9 +919,9 @@ function downloadResults(tp){
     {說明:'模型',內容:isPerf?'學習成效預測 v9-fs (S1-S4, 73 特徵, 預測 S5-S6 後20%, 門檻0.16)':'休退學風險預警 v9-fs (S1-S2, 42 特徵, 兩年內休退學, 預警0.25/觀察0.15)'},
     {說明:'特徵時點',內容:isPerf?'S1-S4 中期':'S1-S2 早期'},
     {說明:'模型表現(v9 留存測試)',內容:isPerf?'ROC-AUC 97.2%、PR-AUC 88.9%、Recall 96.1%、Precision 64.2%(部署門檻)':'ROC-AUC 89.7%、PR-AUC 78.3%、Recall 71.8%、Precision 68.3%(部署門檻)'},
-    {說明:'高風險人數',內容:hi},{說明:'中風險人數',內容:mi},{說明:'低風險人數',內容:lo},{說明:'總計',內容:f.length},{說明:'',內容:''}
+    {說明:'預警人數',內容:hi},{說明:'觀察人數',內容:mi},{說明:'安全人數',內容:lo},{說明:'總計',內容:f.length},{說明:'',內容:''}
   ];
-  const dataRows=f.map(d=>({學生識別碼:d.學生識別碼,系所名稱:d.系所名稱,入學學年:d.入學學年,最終學籍狀況:d.最終學籍狀況,風險等級:d.風險等級,風險分數:(d.預測機率*100).toFixed(2)+'%'}));
+  const dataRows=f.map(d=>({學生識別碼:d.學生識別碼,系所名稱:d.系所名稱,入學學年:d.入學學年,最終學籍狀況:d.最終學籍狀況,風險等級:riskLabel(d.風險等級),風險分數:(d.預測機率*100).toFixed(2)+'%'}));
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(summaryRows),'摘要');
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(dataRows),isPerf?'預測結果':'預警名單');
