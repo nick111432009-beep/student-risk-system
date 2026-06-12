@@ -184,7 +184,8 @@ tbody td{font-size:13px;padding:12px 16px;border-top:1px solid var(--border);whi
       <b>📈 v9 表現</b>（111 學年留存測試）：ROC-AUC 97.2%、PR-AUC 88.9%、Recall 96.1%、Precision 64.2%、F1 77.0%（部署門檻）；十種子平均 F1 76.5%±0.9pp。<br>
       <b>🔒 隱私</b>：所有計算（含特徵工程與同儕統計）皆在您的瀏覽器本機完成，不會上傳至任何伺服器。<br>
       <b>🎯 門檻設計理念</b>：採 F2 召回導向（在訓練集 OOF 機率上取 F2 最大切點）——校務預警任務中「漏接高風險學生」的成本遠高於「誤抓安全學生」。153 名落後生僅漏接 6 名。<br>
-      <b>⚠️ 模型限制</b>：本模型主要依據學生學業、修課與出缺席資料進行預測，部分學習落後行為可能涉及心理、家庭、健康、經濟或生涯規劃等非校務因素，預測結果僅供預警與輔導參考。
+      <b>⚠️ 模型限制</b>：本模型主要依據學生學業、修課與出缺席資料進行預測，部分學習落後行為可能涉及心理、家庭、健康、經濟或生涯規劃等非校務因素，預測結果僅供預警與輔導參考。<br>
+      <span id="model-ver-perf" style="color:#1a56db;font-weight:600">📦 模型檔資訊載入中…</span>
     </div>
 
     <div class="feature-list-panel">
@@ -304,7 +305,8 @@ tbody td{font-size:13px;padding:12px 16px;border-top:1px solid var(--border);whi
       <b>📈 v9 表現</b>（112 學年留存測試）：ROC-AUC 89.7%、PR-AUC 78.3%、Recall 71.8%、Precision 68.3%（部署門檻）；十種子平均 F1 63.6%±2.9pp、滾動回測跨屆 F1 64.4%±4.4pp。<br>
       <b>🔒 隱私</b>：所有計算（含特徵工程與同儕統計）皆在您的瀏覽器本機完成，不會上傳至任何伺服器。<br>
       <b>🎯 門檻設計理念</b>：預警線採 F2 召回導向（漏接成本 &gt;&gt; 誤抓成本）；觀察線取 Youden's J 統計切點與輔導量能門檻之較大者，確保名單規模可被實際消化。<br>
-      <b>⚠️ 模型限制</b>：本模型主要依據學生學業、修課與出缺席資料進行預測，部分休退學行為可能涉及心理、家庭、健康、經濟或生涯規劃等非校務因素，預測結果僅供預警與輔導參考。
+      <b>⚠️ 模型限制</b>：本模型主要依據學生學業、修課與出缺席資料進行預測，部分休退學行為可能涉及心理、家庭、健康、經濟或生涯規劃等非校務因素，預測結果僅供預警與輔導參考。<br>
+      <span id="model-ver-drop" style="color:#b91c1c;font-weight:600">📦 模型檔資訊載入中…</span>
     </div>
 
     <div class="feature-list-panel">
@@ -424,6 +426,7 @@ const PALETTE={
 };
 
 // ─── 狀態 ────────────────────────────────────────────────────
+const ASSET_VER='v9-20260612';   // 換模型時改這個,強制瀏覽器重抓 onnx/json
 const state={
   perf:{data:[],selYears:new Set(),selPred:'all',sess:null,featList:null,featCount:73,charts:{}},
   drop:{data:[],selYears:new Set(),selPred:'all',sess:null,featList:null,featCount:42,charts:{}}
@@ -731,6 +734,14 @@ async function processFile(file,tp){
     const raw=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:null});
     if(!raw.length){hideL();alert('沒有資料！');return;}
     const h=Object.keys(raw[0]);
+    // 完整性檢查:cohort 同儕統計與類別編碼皆由上傳檔現算,部分名單會失真
+    const _grp=new Set(raw.map(r=>String(r['系所名稱']??'?')+'_'+String(r['入學學年']??'?')));
+    if(raw.length<1000||_grp.size<12){
+      const ok=confirm('⚠ 完整性提醒\n\n偵測到上傳檔僅 '+raw.length+' 筆、'+_grp.size+' 個「系所×入學學年」組合。\n'+
+        '本系統的同儕(cohort)相對特徵與類別編碼需要「全校完整名單」才準確;\n'+
+        '若僅上傳部分系所或部分年級,相對位階會失真、預測結果不可信。\n\n確定要繼續嗎?');
+      if(!ok){hideL();return;}
+    }
     document.getElementById('file-loaded-'+tp).style.display='flex';
     document.getElementById('upload-zone-'+tp).style.display='none';
     document.getElementById('file-name-'+tp).textContent=file.name;
@@ -739,9 +750,9 @@ async function processFile(file,tp){
     const s=state[tp];
     const modelFile=tp==='perf'?'performance_model.onnx':'dropout_model.onnx';
     const jsonFile=tp==='perf'?'performance_model_features.json':'dropout_model_features.json';
-    if(!s.sess)s.sess=await ort.InferenceSession.create('./'+modelFile);
+    if(!s.sess)s.sess=await ort.InferenceSession.create('./'+modelFile+'?v='+ASSET_VER);
     if(!s.featList){
-      const r=await fetch('./'+jsonFile);const j=await r.json();
+      const r=await fetch('./'+jsonFile+'?v='+ASSET_VER);const j=await r.json();
       s.featList=j['特徵清單'];
       s.featCount=s.featList.length;
     }
@@ -947,6 +958,23 @@ function onFileChange(e,tp){if(e.target.files[0])processFile(e.target.files[0],t
     });
   });
 });
+// ─── 啟動時載入 features.json:自動顯示模型版本資訊 + 預載特徵清單(與模型檔永遠同步) ───
+(async()=>{
+  const cfg=[['perf','performance_model_features.json'],['drop','dropout_model_features.json']];
+  for(const[tp,f]of cfg){
+    try{
+      const j=await(await fetch('./'+f+'?v='+ASSET_VER)).json();
+      state[tp].featList=j['特徵清單'];state[tp].featCount=j['特徵清單'].length;
+      const el=document.getElementById('model-ver-'+tp);
+      if(el)el.textContent=`📦 模型檔:${j['版本']||'?'}｜訓練日期:${j['訓練日期']||'?'}｜特徵 ${j['特徵數量']} 個｜部署門檻 ${j['門檻']}`
+        +(j['觀察門檻_YoudenJ']!=null&&j['觀察門檻_YoudenJ']!==j['門檻']?`｜觀察線參考 ${j['觀察門檻_YoudenJ']}`:'')
+        +(j['門檻策略']?`｜策略 ${j['門檻策略']}`:'');
+    }catch(e){
+      const el=document.getElementById('model-ver-'+tp);
+      if(el){el.textContent='⚠ 無法載入模型設定檔(features.json)';el.style.color='#b91c1c';}
+    }
+  }
+})();
 </script>
 </body>
 </html>
