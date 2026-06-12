@@ -173,24 +173,23 @@ tbody td{font-size:13px;padding:12px 16px;border-top:1px solid var(--border);whi
   <!-- ===== 分頁一：學習成效預測 ===== -->
   <div id="tab-perf" class="tab-content active">
     <div class="model-info">
-      <b>🤖 學習成效預測模型 v7-fs</b>（XGBoost，合規版：移除性別特徵，v7-fs 特徵選擇後）<br>
-      <b>📌 預測目標</b>：學生最終學習成效是否落於 <b>班級後 20%</b>，作為 <b>教務處課業輔導</b> 之依據。<br>
+      <b>🤖 學習成效預測模型 v9-fs</b>（XGBoost，時序切分訓練，合規版：移除性別特徵）<br>
+      <b>📌 預測目標</b>：以前四學期資料預測學生 <b>第五–六學期（大三）班級排名是否落入後 20%</b>——真正的未來預測，作為 <b>教務處課業輔導</b> 之依據。<br>
       <b>🚦 風險分級</b>：
-      🔴 高風險（模型分數 &gt; 75%）優先安排補救教學｜
-      🟡 中風險（42%–75%）持續觀察｜
-      🟢 低風險（≤42%）定期追蹤<br>
-      <b>📌 分數說明</b>：顯示的「風險分數」為模型輸出之落後風險機率（班級百分比 &gt; 80），數值越高代表越可能落入班級後 20%。<br>
-      <b>🎓 適用對象</b>：建議用於 <b>已完成 S4（入學滿 2 年）</b>的學生，即 100–111 學年。對 112、113 學年等資料尚不完整的學生，預測結果請參考即可。<br>
-      <b>⏱ 特徵時間窗口</b>：僅取自前 4 學期（S1–S4），67 個特徵，不使用 S5 以後資料。<br>
-      <b>📈 v7-fs 表現</b>：Accuracy 91.4%、ROC-AUC 96.1%、Recall 74.5%、Precision 79.9%、F1 77.1%（5 折交叉驗證）。<br>
-      <b>🔒 隱私</b>：所有計算在您的瀏覽器本機完成，不會上傳至任何伺服器。<br>
-      <b>🎯 高風險門檻設計理念</b>：本研究將高風險門檻設定於模型分數 75% 以上，以降低誤報率，避免學務輔導資源過度分散，使高風險名單更具實際介入價值。<br>
+      🔴 預警（模型分數 ≥ 16%）優先安排補救教學｜
+      🟢 安全（&lt; 16%）定期追蹤<br>
+      <b>📌 分數說明</b>：顯示的「模型分數」為落後風險分數（非機率），數值越高代表越可能於大三落入班級後 20%。本版 F2 門檻恰與 Youden 統計切點重疊，觀察帶寬度為零，故為兩級制；名單內請依分數高低排定輔導優先序。<br>
+      <b>🎓 適用對象</b>：已完成 S4（入學滿 2 年）的學生。112、113 學年為本模型的實際預測對象（其 S5–S6 尚未發生，無法回頭驗證）。<br>
+      <b>⏱ 特徵時間窗口</b>：僅取自前 4 學期（S1–S4），73 個特徵（含同儕 cohort 相對位階），不使用 S5 以後資料。<br>
+      <b>📈 v9 表現</b>（111 學年留存測試）：ROC-AUC 97.2%、PR-AUC 88.9%、Recall 96.1%、Precision 64.2%、F1 77.0%（部署門檻）；十種子平均 F1 76.5%±0.9pp。<br>
+      <b>🔒 隱私</b>：所有計算（含特徵工程與同儕統計）皆在您的瀏覽器本機完成，不會上傳至任何伺服器。<br>
+      <b>🎯 門檻設計理念</b>：採 F2 召回導向（在訓練集 OOF 機率上取 F2 最大切點）——校務預警任務中「漏接高風險學生」的成本遠高於「誤抓安全學生」。153 名落後生僅漏接 6 名。<br>
       <b>⚠️ 模型限制</b>：本模型主要依據學生學業、修課與出缺席資料進行預測，部分學習落後行為可能涉及心理、家庭、健康、經濟或生涯規劃等非校務因素，預測結果僅供預警與輔導參考。
     </div>
 
     <div class="feature-list-panel">
       <div class="feature-list-header" onclick="toggleFL('perf')">
-        <span>📋 <b>使用特徵清單</b>（共 <b>67</b> 個特徵，時間窗口 S1–S4）</span>
+        <span>📋 <b>使用特徵清單</b>（共 <b>73</b> 個特徵，時間窗口 S1–S4）</span>
         <span class="chevron" id="chev-fl-perf">▼</span>
       </div>
       <div class="feature-list-body" id="body-fl-perf">
@@ -243,8 +242,8 @@ tbody td{font-size:13px;padding:12px 16px;border-top:1px solid var(--border);whi
         <div class="filter-label">風險等級篩選</div>
         <div class="status-btns" id="pred-btns-perf">
           <button class="status-btn active" data-pred="all">全部</button>
-          <button class="status-btn" data-pred="high">🔴 高風險（模型分數 &gt;75%）</button>
-          <button class="status-btn" data-pred="mid">🟡 中風險（42%–75%）</button>
+          <button class="status-btn" data-pred="high">🔴 預警（模型分數 ≥16%）</button>
+          <button class="status-btn" data-pred="mid">🟡 觀察（本版門檻重疊，群組為空）</button>
           <button class="status-btn" data-pred="low">🟢 低風險（≤42%）</button>
         </div>
       </div>
@@ -264,8 +263,8 @@ tbody td{font-size:13px;padding:12px 16px;border-top:1px solid var(--border);whi
     <div id="result-perf" style="display:none">
       <div class="warn-banner" id="warn-perf"></div>
       <div class="metrics-grid">
-        <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-red"></span>高風險（模型分數 &gt;75%）</div><div class="metric-num" id="cnt-perf-high">0</div><div class="metric-sub">人</div></div>
-        <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-amber"></span>中風險（42%–75%）</div><div class="metric-num" id="cnt-perf-mid">0</div><div class="metric-sub">人</div></div>
+        <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-red"></span>預警（模型分數 ≥16%）</div><div class="metric-num" id="cnt-perf-high">0</div><div class="metric-sub">人</div></div>
+        <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-amber"></span>觀察（本版為空）</div><div class="metric-num" id="cnt-perf-mid">0</div><div class="metric-sub">人</div></div>
         <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-green"></span>低風險（≤42%）</div><div class="metric-num" id="cnt-perf-low">0</div><div class="metric-sub">人</div></div>
         <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-gray"></span>總計</div><div class="metric-num" id="cnt-perf-total">0</div><div class="metric-sub">人</div></div>
       </div>
@@ -294,23 +293,23 @@ tbody td{font-size:13px;padding:12px 16px;border-top:1px solid var(--border);whi
   <!-- ===== 分頁二：休退學預警 ===== -->
   <div id="tab-drop" class="tab-content">
     <div class="model-info-red">
-      <b>⚠️ 休退學風險預警模型 v7-fs</b>（XGBoost，合規版：移除性別特徵，v7-fs 特徵選擇後）<br>
-      <b>📌 預測目標</b>：學生未來是否會 <b>休學或退學</b>，提供 <b>學務處於 S2 結束前作為早期預警與輔導參考</b>。<br>
+      <b>⚠️ 休退學風險預警模型 v9-fs</b>（XGBoost，時序切分訓練，合規版：移除性別特徵）<br>
+      <b>📌 預測目標</b>：學生 <b>入學兩年（S1–S4）內是否休退學</b>（固定觀察窗標籤），提供 <b>學務處於 S2 結束前作為早期預警與輔導參考</b>——EDA 顯示休退學高峰在 S2–S3，本模型即為在爆發前完成辨識而設計。<br>
       <b>🚦 風險分級</b>：
-      🔴 高風險（模型分數 &gt; 75%）優先生活關懷與面談｜
-      🟡 中風險（40%–75%）持續觀察｜
-      🟢 低風險（≤42%）定期追蹤<br>
-      <b>⏱ 特徵時間窗口</b>：僅取自前 2 學期（S1–S2），38 個特徵，不使用 S3 之後資料，確保預測在介入時點前產出。<br>
-      <b>📊 類別不平衡處理</b>：採用 SMOTE 過採樣（A 組設定，strategy=0.5）。<br>
-      <b>📈 v7-fs 表現</b>：Accuracy 94.1%、ROC-AUC 89.0%、Recall 60.2%、Precision 80.3%、F1 68.9%（5 折交叉驗證）。<br>
-      <b>🔒 隱私</b>：所有計算在您的瀏覽器本機完成，不會上傳至任何伺服器。<br>
-      <b>🎯 高風險門檻設計理念</b>：本研究將高風險門檻設定於模型分數 75% 以上，以降低誤報率，避免學務輔導資源過度分散，使高風險名單更具實際介入價值。<br>
+      🔴 預警（模型分數 ≥ 25%）一週內約談並通報系上｜
+      🟡 觀察（15%–25%）列入名單每月確認｜
+      🟢 安全（&lt; 15%）定期追蹤<br>
+      <b>⏱ 特徵時間窗口</b>：僅取自前 2 學期（S1–S2），42 個特徵（含同儕 cohort 相對位階），不使用 S3 之後資料，確保預測在介入時點前產出。<br>
+      <b>📊 類別不平衡處理</b>：SMOTE 過採樣（strategy=0.5，僅作用於訓練折）。<br>
+      <b>📈 v9 表現</b>（112 學年留存測試）：ROC-AUC 89.7%、PR-AUC 78.3%、Recall 71.8%、Precision 68.3%（部署門檻）；十種子平均 F1 63.6%±2.9pp、滾動回測跨屆 F1 64.4%±4.4pp。<br>
+      <b>🔒 隱私</b>：所有計算（含特徵工程與同儕統計）皆在您的瀏覽器本機完成，不會上傳至任何伺服器。<br>
+      <b>🎯 門檻設計理念</b>：預警線採 F2 召回導向（漏接成本 &gt;&gt; 誤抓成本）；觀察線取 Youden's J 統計切點與輔導量能門檻之較大者，確保名單規模可被實際消化。<br>
       <b>⚠️ 模型限制</b>：本模型主要依據學生學業、修課與出缺席資料進行預測，部分休退學行為可能涉及心理、家庭、健康、經濟或生涯規劃等非校務因素，預測結果僅供預警與輔導參考。
     </div>
 
     <div class="feature-list-panel">
       <div class="feature-list-header" onclick="toggleFL('drop')">
-        <span>📋 <b>使用特徵清單</b>（共 <b>38</b> 個特徵，時間窗口 S1–S2）</span>
+        <span>📋 <b>使用特徵清單</b>（共 <b>42</b> 個特徵，時間窗口 S1–S2）</span>
         <span class="chevron" id="chev-fl-drop">▼</span>
       </div>
       <div class="feature-list-body" id="body-fl-drop">
@@ -362,8 +361,8 @@ tbody td{font-size:13px;padding:12px 16px;border-top:1px solid var(--border);whi
         <div class="filter-label">風險等級篩選</div>
         <div class="status-btns" id="pred-btns-drop">
           <button class="status-btn active" data-pred="all">全部</button>
-          <button class="status-btn" data-pred="high">🔴 高風險（&gt;75%）</button>
-          <button class="status-btn" data-pred="mid">🟡 中風險（40%–75%）</button>
+          <button class="status-btn" data-pred="high">🔴 預警（≥25%）</button>
+          <button class="status-btn" data-pred="mid">🟡 觀察（15%–25%）</button>
           <button class="status-btn" data-pred="low">🟢 低風險（≤42%）</button>
         </div>
       </div>
@@ -382,8 +381,8 @@ tbody td{font-size:13px;padding:12px 16px;border-top:1px solid var(--border);whi
 
     <div id="result-drop" style="display:none">
       <div class="metrics-grid">
-        <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-red"></span>高風險（&gt;75%）</div><div class="metric-num" id="cnt-drop-high">0</div><div class="metric-sub">人</div></div>
-        <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-amber"></span>中風險（40%–75%）</div><div class="metric-num" id="cnt-drop-mid">0</div><div class="metric-sub">人</div></div>
+        <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-red"></span>預警（≥25%）</div><div class="metric-num" id="cnt-drop-high">0</div><div class="metric-sub">人</div></div>
+        <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-amber"></span>觀察（15%–25%）</div><div class="metric-num" id="cnt-drop-mid">0</div><div class="metric-sub">人</div></div>
         <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-green"></span>低風險（≤42%）</div><div class="metric-num" id="cnt-drop-low">0</div><div class="metric-sub">人</div></div>
         <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-gray"></span>總計</div><div class="metric-num" id="cnt-drop-total">0</div><div class="metric-sub">人</div></div>
       </div>
@@ -415,9 +414,9 @@ tbody td{font-size:13px;padding:12px 16px;border-top:1px solid var(--border);whi
 const 弱勢補助關鍵字=['清寒助學金','低收入戶助學金','教育部弱勢學生生活助學金','餐食助學代金','就學貸款','急難救助','原民會原住民學生獎助學金','圓夢起飛輔導助學金','學習及就業輔導獎勵金','愛舍服務學習助學金','教育部學雜費減免','精進學習助學金'];
 
 const FEAT_IMP={
-  perf:[{name:'平均_最小',value:0.082},{name:'缺曠率_S4',value:0.071},{name:'平均_S4',value:0.065},{name:'系所',value:0.058},{name:'功過淨值',value:0.052},{name:'平均_變化',value:0.048},{name:'學分_S1',value:0.041},{name:'累積懲處_S4',value:0.038},{name:'後期惡化率',value:0.035},{name:'曠課佔比_S4',value:0.032}],
-  drop:[{name:'平均_S2',value:0.091},{name:'學分_S2',value:0.078},{name:'平均_最小',value:0.065},{name:'缺曠率_S2',value:0.060},{name:'系所',value:0.055},{name:'曠課佔比_S2',value:0.050},{name:'入學方式',value:0.047},{name:'功過淨值_S2',value:0.044},{name:'累積缺曠_S2',value:0.038},{name:'請假_S2',value:0.033}]
-};
+  perf:[{name:'平均_S4_cohort中位數差距',value:0.302},{name:'平均_最小_cohort中位數差距',value:0.040},{name:'曠課佔比_S3',value:0.023},{name:'平均_S3',value:0.017},{name:'平均_S2',value:0.015},{name:'系所_編碼',value:0.014},{name:'學生身分別_編碼',value:0.014},{name:'視窗內_補助紀錄數',value:0.014},{name:'平均_趨勢斜率',value:0.013},{name:'曠課佔比_S4',value:0.013}],
+  drop:[{name:'平均_S2_及格旗標',value:0.520},{name:'平均_S2_cohort中位數差距',value:0.061},{name:'學分_S2_cohort中位數差距',value:0.043},{name:'學分_變化_S1S2',value:0.034},{name:'缺曠_加速旗標',value:0.030},{name:'視窗內_是否有補助',value:0.027},{name:'入學方式_編碼',value:0.026},{name:'學分_S2_偏少旗標',value:0.023},{name:'視窗內_曾參與社團',value:0.021},{name:'視窗內_曾擔任社員',value:0.017}]
+}
 
 const PALETTE={
   perf:{prob:'rgba(26,86,219,0.7)',high:'rgba(192,33,33,0.7)',line:'#E02424',lineFill:'rgba(192,33,33,0.1)',featBar:'rgba(26,86,219,0.85)',featBarBg:'rgba(147,197,253,0.8)'},
@@ -426,8 +425,8 @@ const PALETTE={
 
 // ─── 狀態 ────────────────────────────────────────────────────
 const state={
-  perf:{data:[],selYears:new Set(),selPred:'all',sess:null,encoders:null,featCount:67,charts:{}},
-  drop:{data:[],selYears:new Set(),selPred:'all',sess:null,encoders:null,featCount:38,charts:{}}
+  perf:{data:[],selYears:new Set(),selPred:'all',sess:null,featList:null,featCount:73,charts:{}},
+  drop:{data:[],selYears:new Set(),selPred:'all',sess:null,featList:null,featCount:42,charts:{}}
 };
 let currentTab='perf';
 
@@ -442,16 +441,15 @@ function _fv(row,c){for(const x of c){const v=nv(row,x);if(v!==null)return v;}re
 function _lv(row,c){for(let i=c.length-1;i>=0;i--){const v=nv(row,c[i]);if(v!==null)return v;}return 0;}
 function _s(row,c,i){return i<c.length?(nv(row,c[i])||0):0;}
 function _subFlags(row,h){return 弱勢補助關鍵字.map(kw=>getCols(h,kw).some(x=>bv(row,x))?1:0);}
-// 模型一：休退學 — 高機率=高風險（正向）  門檻：>0.75 高 / >0.40 中
+// 模型一 v9：預警 ≥0.25（OOF F2 部署門檻）/ 觀察 ≥0.15（Youden's J）
 function getDropRisk(riskProb){
-  if(riskProb>0.75)return{level:'高風險',tag:'tag-red',barColor:'#ef4444'};
-  if(riskProb>0.40)return{level:'中風險',tag:'tag-amber',barColor:'#f59e0b'};
+  if(riskProb>=0.25)return{level:'高風險',tag:'tag-red',barColor:'#ef4444'};
+  if(riskProb>=0.15)return{level:'中風險',tag:'tag-amber',barColor:'#f59e0b'};
   return{level:'低風險',tag:'tag-green',barColor:'#22c55e'};
 }
-// 模型二：學習成效 — 高機率=落後風險高（班級百分比>80，直接輸出）門檻：>0.75 高 / >0.42 中（F1最佳@0.42）
+// 模型二 v9：預警 ≥0.16（OOF F2 部署門檻；恰等於 Youden 切點 → 觀察帶寬度為零，實質兩級）
 function getPerfRisk(riskProb){
-  if(riskProb>0.75)return{level:'高風險',tag:'tag-red',barColor:'#ef4444'};
-  if(riskProb>0.42)return{level:'中風險',tag:'tag-amber',barColor:'#f59e0b'};
+  if(riskProb>=0.16)return{level:'高風險',tag:'tag-red',barColor:'#ef4444'};
   return{level:'低風險',tag:'tag-green',barColor:'#22c55e'};
 }
 function getRiskLevel(riskProb,tp){return tp==='perf'?getPerfRisk(riskProb):getDropRisk(riskProb);}
@@ -464,222 +462,223 @@ function setP(tp,p,t){
   document.getElementById('loading-text').textContent=t;
 }
 
-// ─── Feature builders（v7-fs）────────────────────────────────
-// 補助關鍵字索引：0清寒 1低收 2教育部弱勢 3餐食 4就學貸款 5急難
-//               6原民 7圓夢起飛 8學習就業 9愛舍 10教育部學雜費 11精進
-
-function _encV(tp,key,val){
-  const m=(state[tp].encoders||{})[key];
-  const v=String(val==null||val===''?'未知':val);
-  return (m&&m[v]!=null)?m[v]:0;
+// ─── v9 特徵引擎（由 features.json 特徵清單驅動，與 notebook 建立特徵_v9 同構）──
+// 設計原則：JS 不再寫死特徵順序；一律先算出「特徵字典」，再依 features.json 的
+// 特徵清單組向量。模型更新時只要換 onnx + json，前端不必改碼。
+function subCols(h,kw,nSem){
+  // 注意:SheetJS 對重複欄名會加 _1.._7 後綴(對應 S2..S8),不可把 _s 當學期編號。
+  // 僅在欄名有「明確學期標記」(S1、第1學期…)時依標記取;否則按欄位順序取前 nSem 個
+  // (與 notebook 在本校資料上的實際行為一致 — pandas .1 後綴同樣走順序 fallback)。
+  const cand=getCols(h,kw);
+  if(!cand.length)return[];
+  const matched=[];
+  for(let s=1;s<=nSem;s++){
+    const pats=[new RegExp('S'+s+'(?!\\d)'),new RegExp('第'+s+'學期'),
+      new RegExp('學期'+s+'(?!\\d)'),new RegExp('（'+s+'）'),new RegExp('\\('+s+'\\)')];
+    for(const c of cand){if(pats.some(p=>p.test(c)))matched.push(c);}
+  }
+  if(matched.length)return[...new Set(matched)];
+  return cand.length>=nSem?cand.slice(0,nSem):[];
 }
-// 補助窗口欄位：排除 S(maxS+1)~S8
-function _subW(h,kw,maxS){
-  return getCols(h,kw).filter(c=>{
-    for(let s=maxS+1;s<=8;s++){if(c.includes('S'+s)||c.includes('第'+s+'學')||c.includes('_'+s+('學')))return false;}
-    return true;
-  });
-}
+function slope4(y){return(-1.5*y[0]-0.5*y[1]+0.5*y[2]+1.5*y[3])/5;}
+function _median(a){const v=a.filter(x=>x!=null&&isFinite(x)).sort((p,q)=>p-q);const n=v.length;
+  if(!n)return NaN;return n%2?v[(n-1)/2]:(v[n/2-1]+v[n/2])/2;}
+function _std1(a){const v=a.filter(x=>x!=null&&isFinite(x));const n=v.length;if(n<2)return NaN;
+  const m=v.reduce((s,x)=>s+x,0)/n;return Math.sqrt(v.reduce((s,x)=>s+(x-m)*(x-m),0)/(n-1));}
+function longestRun(b){let mx=0,cur=0;for(const v of b){cur=v?cur+1:0;if(cur>mx)mx=cur;}return mx;}
 
-function buildDropFeatures(row,h){
-  // v7-fs: S1-S2 早期 38 特徵
-  const 平c=getCols(h,'平均').filter(c=>!c.includes('班級')).slice(0,2);
-  const 曠c=getCols(h,'曠課','缺曠課總數').slice(0,2);
-  const 缺c=getCols(h,'缺曠課總數').slice(0,2);
-  const 請c=getCols(h,'請假總數').slice(0,2);
-  const 嘉c=getCols(h,'嘉獎數').slice(0,2),小fc=getCols(h,'小功數').slice(0,2),大fc=getCols(h,'大功數').slice(0,2);
-  const 申c=getCols(h,'申誡數').slice(0,2),小oc=getCols(h,'小過數').slice(0,2),大oc=getCols(h,'大過數').slice(0,2);
-  const 學c=getCols(h,'總修習學分').slice(0,2);
-  const 社c=getCols(h,'是否參與社團').slice(0,2),幹c=getCols(h,'是否擔任幹部').slice(0,2);
-  const 員c=getCols(h,'是否擔任社員').slice(0,2);
-  const _anyB=c=>c.some(x=>bv(row,x))?1:0;
-  const _cntB=c=>c.reduce((a,x)=>a+(bv(row,x)?1:0),0);
-  const _sB=(c,i)=>i<c.length?(bv(row,c[i])?1:0):0;
-  const _mnN=c=>{const v=c.map(x=>nv(row,x)).filter(v=>v!==null);return v.length?Math.min(...v):0;};
-  // GPA
-  const avgS1=_s(row,平c,0),avgS2=_s(row,平c,1);
-  const avgMin=_mnN(平c),avgFirst=_fv(row,平c),avgLast=_lv(row,平c),avgChg=avgLast-avgFirst;
-  // Credits
-  const crS1=_s(row,學c,0),crS2=_s(row,學c,1);
-  // Attendance
-  const absS1=_s(row,缺c,0),absS2=_s(row,缺c,1);
-  const trntS1=_s(row,曠c,0),trntS2=_s(row,曠c,1);
-  const cumAbsS1=absS1,cumAbsS2=absS1+absS2;
-  const cumTrntS1=trntS1,cumTrntS2=trntS1+trntS2;
-  const cumCrS1=(crS1)||1,cumCrS2=(crS1+crS2)||1;
-  const absRateS2=cumAbsS2/cumCrS2;
-  const trntRatioS1=cumAbsS1>0?cumTrntS1/cumAbsS1:0;
-  const trntRatioS2=cumAbsS2>0?cumTrntS2/cumAbsS2:0;
-  // Discipline
-  const gS1=(nv(row,大fc[0])||0)*9+(nv(row,小fc[0])||0)*3+(nv(row,嘉c[0])||0);
-  const gS2=(nv(row,大fc[1])||0)*9+(nv(row,小fc[1])||0)*3+(nv(row,嘉c[1])||0);
-  const dS1=(nv(row,大oc[0])||0)*9+(nv(row,小oc[0])||0)*3+(nv(row,申c[0])||0);
-  const dS2=(nv(row,大oc[1])||0)*9+(nv(row,小oc[1])||0)*3+(nv(row,申c[1])||0);
-  const cumGS1=gS1,cumDS2=dS1+dS2;
-  const meritCurS2=gS2-dS2,meritCumS2=(gS1+gS2)-(dS1+dS2);
-  // Subsidy (S1-S2 window)
-  const SW=kw=>_subW(h,kw,2);
-  const sf=弱勢補助關鍵字.map(kw=>SW(kw).some(x=>bv(row,x))?1:0);
-  const hasSub=sf.some(f=>f)?1:0;
-  const subRec=弱勢補助關鍵字.reduce((t,kw)=>t+SW(kw).filter(x=>bv(row,x)).length,0);
-  return[
-    avgS2,                                    // f0  平均_S2
-    crS2,                                     // f1  學分_S2
-    _anyB(社c),                               // f2  視窗內_曾參與社團
-    hasSub,                                   // f3  視窗內_是否有補助
-    _sB(員c,1),                               // f4  社員_S2
-    _sB(社c,0),                               // f5  社團_S1
-    _encV('drop','入學方式',row['入學方式']),  // f6  入學方式_編碼
-    _anyB(員c),                               // f7  視窗內_曾擔任社員
-    avgMin,                                   // f8  平均_最小
-    meritCurS2,                               // f9  功過淨值_當期_S2
-    crS1,                                     // f10 學分_S1
-    _encV('drop','系所',row['系所名稱']||row['系所']), // f11 系所_編碼
-    cumAbsS1,                                 // f12 累積缺曠_S1
-    _cntB(社c),                               // f13 視窗內_參與社團學期數
-    trntRatioS1,                              // f14 曠課佔比_S1
-    _sB(社c,1),                               // f15 社團_S2
-    trntS2,                                   // f16 曠課_S2
-    cumAbsS2,                                 // f17 累積缺曠_S2
-    avgChg,                                   // f18 平均_變化
-    _encV('drop','學生身分別',row['學生身分別']), // f19 學生身分別_編碼
-    cumGS1,                                   // f20 累積獎勵點數_S1
-    _s(row,請c,1),                            // f21 請假_S2
-    meritCumS2,                               // f22 功過淨值_S2
-    sf[4],                                    // f23 視窗內_有_就學貸款
-    trntRatioS2,                              // f24 曠課佔比_S2
-    sf[0],                                    // f25 視窗內_有_清寒助學金
-    absRateS2,                                // f26 缺曠率_S2
-    _cntB(員c),                               // f27 視窗內_擔任社員學期數
-    sf[10],                                   // f28 視窗內_有_教育部學雜費減免
-    subRec,                                   // f29 視窗內_補助紀錄數
-    _anyB(幹c),                               // f30 視窗內_曾擔任幹部
-    _s(row,請c,0),                            // f31 請假_S1
-    _sB(員c,0),                               // f32 社員_S1
-    sf[7],                                    // f33 視窗內_有_圓夢起飛輔導助學金
-    sf[9],                                    // f34 視窗內_有_愛舍服務學習助學金
-    _sB(幹c,1),                               // f35 幹部_S2
-    cumDS2,                                   // f36 累積懲處點數_S2
-    dS1,                                      // f37 懲處點數_S1
-  ];
+function buildEncoders(rows){
+  const spec=[['入學方式','入學方式'],['學制','學制'],['系所名稱','系所'],['學生身分別','學生身分別']];
+  const enc={};
+  for(const[col,key]of spec){
+    const vals=[...new Set(rows.map(r=>{const v=r[col];return(v==null)?'未知':String(v);}))].sort();
+    enc[key]={};vals.forEach((v,i)=>enc[key][v]=i);
+  }
+  return enc;
 }
 
-function buildPerfFeatures(row,h){
-  // v7-fs: S1-S4 中期 67 特徵
-  const 平c=getCols(h,'平均').filter(c=>!c.includes('班級')).slice(0,4);
-  const 曠c=getCols(h,'曠課','缺曠課總數').slice(0,4);
-  const 缺c=getCols(h,'缺曠課總數').slice(0,4);
-  const 請c=getCols(h,'請假總數').slice(0,4);
-  const 嘉c=getCols(h,'嘉獎數').slice(0,4),小fc=getCols(h,'小功數').slice(0,4),大fc=getCols(h,'大功數').slice(0,4);
-  const 申c=getCols(h,'申誡數').slice(0,4),小oc=getCols(h,'小過數').slice(0,4),大oc=getCols(h,'大過數').slice(0,4);
-  const 學c=getCols(h,'總修習學分').slice(0,4);
-  const 社c=getCols(h,'是否參與社團').slice(0,4),幹c=getCols(h,'是否擔任幹部').slice(0,4);
-  const 員c=getCols(h,'是否擔任社員').slice(0,4),長c=getCols(h,'是否擔任社長').slice(0,4);
-  const _anyB=c=>c.some(x=>bv(row,x))?1:0;
-  const _cntB=c=>c.reduce((a,x)=>a+(bv(row,x)?1:0),0);
-  const _sB=(c,i)=>i<c.length?(bv(row,c[i])?1:0):0;
-  const _mnN=c=>{const v=c.map(x=>nv(row,x)).filter(v=>v!==null);return v.length?Math.min(...v):0;};
-  // GPA
-  const avgMin=_mnN(平c),avgS2=_s(row,平c,1),avgS4=_s(row,平c,3);
-  const avgFirst=_fv(row,平c),avgLast=_lv(row,平c),avgChg=avgLast-avgFirst;
-  // Credits
-  const crS1=_s(row,學c,0),crS2=_s(row,學c,1),crS3=_s(row,學c,2),crS4=_s(row,學c,3);
-  // Attendance
-  const absS1=_s(row,缺c,0),absS2=_s(row,缺c,1),absS3=_s(row,缺c,2),absS4=_s(row,缺c,3);
-  const trntS1=_s(row,曠c,0),trntS2=_s(row,曠c,1),trntS3=_s(row,曠c,2),trntS4=_s(row,曠c,3);
-  const cumAbsS2=absS1+absS2,cumAbsS3=cumAbsS2+absS3,cumAbsS4=cumAbsS3+absS4;
-  const cumTrntS1=trntS1,cumTrntS3=trntS1+trntS2+trntS3,cumTrntS4=cumTrntS3+trntS4;
-  const cumCrS2=(crS1+crS2)||1,cumCrS4=(crS1+crS2+crS3+crS4)||1;
-  const absRateS2=cumAbsS2/cumCrS2,absRateS4=cumAbsS4/cumCrS4;
-  const trntRatioS1=absS1>0?trntS1/absS1:0;
-  const trntRatioS2=cumAbsS2>0?(trntS1+trntS2)/cumAbsS2:0;
-  const trntRatioS3=cumAbsS3>0?cumTrntS3/cumAbsS3:0;
-  const trntRatioS4=cumAbsS4>0?cumTrntS4/cumAbsS4:0;
-  const earlyTrnt=(trntS1+trntS2)||1,lateTrnt=trntS3+trntS4;
-  const trntWorsen=lateTrnt/earlyTrnt;
-  // Discipline
-  const G=i=>(nv(row,大fc[i])||0)*9+(nv(row,小fc[i])||0)*3+(nv(row,嘉c[i])||0);
-  const D=i=>(nv(row,大oc[i])||0)*9+(nv(row,小oc[i])||0)*3+(nv(row,申c[i])||0);
-  const g1=G(0),g2=G(1),g3=G(2),g4=G(3);
-  const d1=D(0),d2=D(1),d3=D(2),d4=D(3);
-  const cumGS1=g1,cumDS2=d1+d2,cumDS4=d1+d2+d3+d4;
-  const meritCurS2=g2-d2;
-  const meritS2=(g1+g2)-(d1+d2),meritS3=(g1+g2+g3)-(d1+d2+d3),meritS4=(g1+g2+g3+g4)-(d1+d2+d3+d4);
-  // Subsidy (S1-S4 window)
-  const SW=kw=>_subW(h,kw,4);
-  const sf=弱勢補助關鍵字.map(kw=>SW(kw).some(x=>bv(row,x))?1:0);
-  const hasSub=sf.some(f=>f)?1:0;
-  const subTypeCount=sf.reduce((a,b)=>a+b,0);
-  const subRec=弱勢補助關鍵字.reduce((t,kw)=>t+SW(kw).filter(x=>bv(row,x)).length,0);
-  return[
-    avgMin,                                    // f0  平均_最小
-    absRateS4,                                 // f1  缺曠率_S4
-    avgS4,                                     // f2  平均_S4
-    _encV('perf','系所',row['系所名稱']||row['系所']), // f3 系所_編碼
-    meritS4,                                   // f4  功過淨值
-    avgChg,                                    // f5  平均_變化
-    crS1,                                      // f6  學分_S1
-    sf[0],                                     // f7  視窗內_有_清寒助學金
-    cumDS4,                                    // f8  累積懲處點數_S4
-    _encV('perf','學生身分別',row['學生身分別']),// f9  學生身分別_編碼
-    _encV('perf','入學方式',row['入學方式']),   // f10 入學方式_編碼
-    _sB(員c,2),                                // f11 社員_S3
-    cumTrntS1,                                 // f12 累積曠課_S1
-    _sB(幹c,3),                                // f13 幹部_S4
-    _sB(幹c,1),                                // f14 幹部_S2
-    avgS2,                                     // f15 平均_S2
-    cumTrntS4,                                 // f16 累積曠課_S4
-    _sB(社c,1),                                // f17 社團_S2
-    meritS2,                                   // f18 功過淨值_S2
-    cumGS1,                                    // f19 累積獎勵點數_S1
-    _cntB(社c),                                // f20 視窗內_參與社團學期數
-    subTypeCount,                              // f21 視窗內_補助類型數
-    _cntB(員c),                                // f22 視窗內_擔任社員學期數
-    _sB(幹c,0),                                // f23 幹部_S1
-    _sB(社c,2),                                // f24 社團_S3
-    absS4,                                     // f25 缺曠_S4
-    trntRatioS4,                               // f26 曠課佔比_S4
-    cumAbsS2,                                  // f27 累積缺曠_S2
-    trntRatioS2,                               // f28 曠課佔比_S2
-    sf[4],                                     // f29 視窗內_有_就學貸款
-    hasSub,                                    // f30 視窗內_是否有補助
-    _anyB(長c),                                // f31 視窗內_曾擔任社長
-    trntRatioS3,                               // f32 曠課佔比_S3
-    sf[10],                                    // f33 視窗內_有_教育部學雜費減免
-    _sB(長c,3),                                // f34 社長_S4
-    _cntB(幹c),                                // f35 視窗內_擔任幹部學期數
-    cumAbsS3,                                  // f36 累積缺曠_S3
-    _sB(社c,0),                                // f37 社團_S1
-    _s(row,請c,3),                             // f38 請假_S4
-    g3,                                        // f39 獎勵點數_S3
-    crS2,                                      // f40 學分_S2
-    trntS3,                                    // f41 曠課_S3
-    _s(row,請c,0),                             // f42 請假_S1
-    subRec,                                    // f43 視窗內_補助紀錄數
-    meritS3,                                   // f44 功過淨值_S3
-    absRateS2,                                 // f45 缺曠率_S2
-    crS3,                                      // f46 學分_S3
-    _sB(員c,3),                                // f47 社員_S4
-    _anyB(社c),                                // f48 視窗內_曾參與社團
-    _s(row,請c,1),                             // f49 請假_S2
-    sf[7],                                     // f50 視窗內_有_圓夢起飛輔導助學金
-    _anyB(員c),                                // f51 視窗內_曾擔任社員
-    _anyB(幹c),                                // f52 視窗內_曾擔任幹部
-    g4,                                        // f53 獎勵點數_S4
-    trntWorsen,                                // f54 曠課_後期惡化率
-    trntRatioS1,                               // f55 曠課佔比_S1
-    absS2,                                     // f56 缺曠_S2
-    _s(row,請c,2),                             // f57 請假_S3
-    meritCurS2,                                // f58 功過淨值_當期_S2
-    cumDS2,                                    // f59 累積懲處點數_S2
-    _sB(幹c,2),                                // f60 幹部_S3
-    sf[11],                                    // f61 視窗內_有_精進學習助學金
-    sf[9],                                     // f62 視窗內_有_愛舍服務學習助學金
-    _sB(員c,1),                                // f63 社員_S2
-    _sB(員c,0),                                // f64 社員_S1
-    _sB(社c,3),                                // f65 社團_S4
-    _sB(長c,2),                                // f66 社長_S3
-  ];
+function computeBase(row,h,mode,enc,G){
+  // G：欄位群（一次算好傳入）  enc：LabelEncoder 對照
+  const n=mode==='early'?2:4,F={},eps=1e-6;
+  const encGet=(key,col)=>{const v=row[col];const k=(v==null)?'未知':String(v);
+    return(enc[key]&&enc[key][k]!=null)?enc[key][k]:0;};
+  F['入學方式_編碼']=encGet('入學方式','入學方式');
+  F['學制_編碼']=encGet('學制','學制');
+  F['系所_編碼']=encGet('系所','系所名稱');
+  F['學生身分別_編碼']=encGet('學生身分別','學生身分別');
+
+  const NV=(c,j)=>j<c.length?nv(row,c[j]):null;          // 原始值（可 null）
+  const N0=(c,j)=>{const v=NV(c,j);return v==null?0:v;};  // fillna(0)
+  const BV=(c,j)=>j<c.length?(bv(row,c[j])?1:0):0;
+
+  // B. 學業
+  const avRaw=[];for(let j=0;j<n;j++)avRaw.push(NV(G.平,j));
+  const avOK=avRaw.filter(v=>v!=null);
+  F['平均_最大']=avOK.length?Math.max(...avOK):NaN;
+  F['平均_最小']=avOK.length?Math.min(...avOK):NaN;
+  const first=avOK.length?avOK[0]:NaN;
+  let last=NaN;for(let j=n-1;j>=0;j--){if(avRaw[j]!=null){last=avRaw[j];break;}}
+  F['平均_最初']=first;F['平均_變化']=last-first;
+  for(let j=0;j<n;j++)F['平均_S'+(j+1)]=avRaw[j]==null?0:avRaw[j];
+
+  // C. 出勤
+  let cumK=0,cumQ=0,cumCr=0;
+  for(let j=0;j<n;j++){const s=j+1;
+    const k=N0(G.曠,j),q=N0(G.缺,j),cr=N0(G.學分,j);
+    F['曠課_S'+s]=k;F['缺曠_S'+s]=q;F['請假_S'+s]=N0(G.請,j);F['學分_S'+s]=cr;
+    cumK+=k;cumQ+=q;cumCr+=cr;
+    F['累積曠課_S'+s]=cumK;F['累積缺曠_S'+s]=cumQ;
+    F['缺曠率_S'+s]=cumCr===0?NaN:cumQ/cumCr;
+    F['曠課佔比_S'+s]=cumQ===0?NaN:cumK/cumQ;
+  }
+  F['缺曠率']=cumCr===0?NaN:cumQ/cumCr;
+  if(mode==='mid'&&G.曠.length>=4){
+    const early=N0(G.曠,0)+N0(G.曠,1),late=N0(G.曠,2)+N0(G.曠,3);
+    F['後期惡化率']=early===0?NaN:late/early;
+  }
+
+  // D. 功過
+  let cg=0,cp=0;
+  for(let j=0;j<n;j++){const s=j+1;
+    const g=N0(G.大功,j)*9+N0(G.小功,j)*3+N0(G.嘉,j);
+    const p=N0(G.大過,j)*9+N0(G.小過,j)*3+N0(G.申,j);
+    F['獎勵點數_S'+s]=g;F['懲處點數_S'+s]=p;F['功過淨值_當期_S'+s]=g-p;
+    cg+=g;cp+=p;
+    F['累積獎勵點數_S'+s]=cg;F['累積懲處點數_S'+s]=cp;F['功過淨值_S'+s]=cg-cp;
+  }
+  F['功過淨值']=F['功過淨值_S'+n];
+
+  // E. 校園參與
+  const anyB=c=>{for(let j=0;j<Math.min(c.length,n);j++)if(bv(row,c[j]))return 1;return 0;};
+  const cntB=c=>{let t=0;for(let j=0;j<Math.min(c.length,n);j++)t+=bv(row,c[j])?1:0;return t;};
+  F['視窗內_曾參與社團']=anyB(G.社);F['視窗內_參與社團學期數']=cntB(G.社);
+  F['視窗內_曾擔任幹部']=anyB(G.幹);F['視窗內_擔任幹部學期數']=cntB(G.幹);
+  F['視窗內_曾擔任社員']=anyB(G.員);F['視窗內_擔任社員學期數']=cntB(G.員);
+  F['視窗內_曾擔任社長']=anyB(G.長);F['視窗內_擔任社長學期數']=cntB(G.長);
+  for(let j=0;j<n;j++){const s=j+1;
+    F['社團_S'+s]=BV(G.社,j);F['幹部_S'+s]=BV(G.幹,j);
+    F['社員_S'+s]=BV(G.員,j);F['社長_S'+s]=BV(G.長,j);
+  }
+
+  // F. 補助
+  let anySub=0,typeCnt=0,recCnt=0;
+  for(const kw of 弱勢補助關鍵字){
+    const kc=G.補助[kw];
+    if(kc.length){
+      const flag=kc.some(c=>bv(row,c))?1:0;
+      F['視窗內_有_'+kw]=flag;anySub=anySub||flag;typeCnt+=flag;
+      recCnt+=kc.reduce((t,c)=>t+(bv(row,c)?1:0),0);
+    }
+  }
+  F['視窗內_是否有補助']=anySub;F['視窗內_補助類型數']=typeCnt;F['視窗內_補助紀錄數']=recCnt;
+
+  // G. 衍生 — early
+  if(mode==='early'&&G.平.length>=2){
+    const s1=F['平均_S1'],s2=F['平均_S2'];
+    F['平均_變化率_S1S2']=s1===0?0:(s2-s1)/Math.abs(s1);
+    F['平均_S2_及格旗標']=s2<60?1:0;
+    F['平均_波動度']=Math.abs(s2-s1)/Math.SQRT2;
+    if(G.學分.length>=2){
+      const c1=F['學分_S1'],c2=F['學分_S2'];
+      F['學分_變化_S1S2']=c2-c1;F['學分_減少旗標']=c2<c1?1:0;
+      F['學分_S2_偏少旗標']=c2<12?1:0;F['累積學分_S1S2']=c1+c2;
+    }
+    const r1=isFinite(F['缺曠率_S1'])?F['缺曠率_S1']:0,r2=isFinite(F['缺曠率_S2'])?F['缺曠率_S2']:0;
+    F['缺曠率_變化_S1S2']=r2-r1;
+    if(G.缺.length>=2)F['缺曠_加速旗標']=N0(G.缺,1)>N0(G.缺,0)?1:0;
+    F['社團_參與深度']=F['視窗內_擔任社長學期數']*3+F['視窗內_擔任幹部學期數']*2+F['視窗內_擔任社員學期數'];
+    if(G.社.length>=2)F['社團_中斷旗標']=(BV(G.社,0)===1&&BV(G.社,1)===0)?1:0;
+    if(G.員.length>=2&&G.幹.length>=2)F['社團_角色升級']=(BV(G.員,0)===1&&BV(G.幹,1)===1)?1:0;
+    const 強度={'急難救助':4,'低收入戶助學金':3,'教育部弱勢學生生活助學金':3,'清寒助學金':2,'就學貸款':1};
+    let st=0;for(const kw in 強度){const f=F['視窗內_有_'+kw];if(f!=null)st+=f*強度[kw];}
+    F['補助_強度分']=st;
+    F['急難救助_旗標']=F['視窗內_有_急難救助']!=null?F['視窗內_有_急難救助']:0;
+    let ns=0;
+    for(const kw of 弱勢補助關鍵字){const kc=G.補助2[kw];
+      if(kc.length>=2&&!bv(row,kc[0])&&bv(row,kc[1]))ns=1;}
+    F['補助_新增旗標']=ns;
+    F['功過_惡化旗標']=F['懲處點數_S2']>F['獎勵點數_S2']?1:0;
+  }
+
+  // G. 衍生 — mid
+  if(mode==='mid'&&G.平.length>=4){
+    const ff=[];let prev=null;
+    for(let j=0;j<4;j++){const v=avRaw[j]!=null?avRaw[j]:prev;ff.push(v==null?0:v);if(avRaw[j]!=null)prev=avRaw[j];}
+    F['平均_趨勢斜率']=slope4(ff);
+    let mnI=0;for(let j=1;j<4;j++)if(ff[j]<ff[mnI])mnI=j;
+    F['平均_最低分學期']=mnI+1;F['平均_最低分後期旗標']=mnI+1>=3?1:0;
+    F['平均_最大最小差距']=Math.max(...ff)-Math.min(...ff);
+    F['平均_S4_及格旗標']=(avRaw[3]==null?0:avRaw[3])<60?1:0;
+    const s3=avRaw[2]==null?0:avRaw[2],s4=avRaw[3]==null?0:avRaw[3];
+    F['平均_變化率_S3S4']=s3===0?0:(s4-s3)/Math.abs(s3);
+    F['平均_連續下滑期數']=longestRun([ff[1]<ff[0],ff[2]<ff[1],ff[3]<ff[2]]);
+    const rr=[1,2,3,4].map(s=>isFinite(F['缺曠率_S'+s])?F['缺曠率_S'+s]:0);
+    F['缺曠率_趨勢斜率']=slope4(rr);
+    F['缺曠率_變化率_S3S4']=(rr[3]-rr[2])/(Math.abs(rr[2])+eps);
+    F['缺曠率_加速度']=(rr[3]-rr[2])-(rr[2]-rr[1]);
+    let mxI=0;for(let j=1;j<4;j++)if(rr[j]>rr[mxI])mxI=j;
+    F['缺曠率_峰值學期']=mxI+1;
+    F['缺曠率_S4倍數']=rr[3]/(rr[0]+eps);
+    if(G.學分.length>=4){
+      const cr=[0,1,2,3].map(j=>N0(G.學分,j));
+      F['學分_趨勢斜率']=slope4(cr);
+      F['學分_減少累計期數']=(cr[1]<cr[0]?1:0)+(cr[2]<cr[1]?1:0)+(cr[3]<cr[2]?1:0);
+      F['學分_完成率']=(cr[0]+cr[1]+cr[2]+cr[3])/64;
+    }
+    F['功過_趨勢斜率']=slope4([1,2,3,4].map(s=>F['功過淨值_S'+s]));
+  }
+  return F;
+}
+
+function buildAll(rows,h,mode){
+  const n=mode==='early'?2:4;
+  const G={
+    平:getCols(h,'平均','班級').slice(0,n),
+    曠:getCols(h,'曠課','缺曠課總數').slice(0,n),
+    缺:getCols(h,'缺曠課總數').slice(0,n),
+    請:getCols(h,'請假總數').slice(0,n),
+    嘉:getCols(h,'嘉獎數').slice(0,n),小功:getCols(h,'小功數').slice(0,n),大功:getCols(h,'大功數').slice(0,n),
+    申:getCols(h,'申誡數').slice(0,n),小過:getCols(h,'小過數').slice(0,n),大過:getCols(h,'大過數').slice(0,n),
+    學分:getCols(h,'總修習學分').slice(0,n),
+    社:getCols(h,'是否參與社團').slice(0,n),幹:getCols(h,'是否擔任幹部').slice(0,n),
+    員:getCols(h,'是否擔任社員').slice(0,n),長:getCols(h,'是否擔任社長').slice(0,n),
+    補助:{},補助2:{},
+  };
+  for(const kw of 弱勢補助關鍵字){G.補助[kw]=subCols(h,kw,n);G.補助2[kw]=subCols(h,kw,2);}
+  const enc=buildEncoders(rows);
+  const feats=rows.map(r=>computeBase(r,h,mode,enc,G));
+
+  // ── Cohort 化（系所×入學學年；樣本<10 退回系所中位數；std ddof=1）──
+  const cohortKey=rows.map(r=>String(r['系所名稱']==null?'未知':r['系所名稱'])+'_'+String(r['入學學年']));
+  const deptKey=rows.map(r=>String(r['系所名稱']==null?'未知':r['系所名稱']));
+  const targets=mode==='early'
+    ?[['平均_最小',false,false],['平均_S2',true,false],['學分_S2',false,false],['缺曠率_S2',true,true]]
+    :[['平均_最小',false,false],['平均_S4',true,false],['缺曠率_S4',true,true],
+      ['學分_S4',false,false],['曠課_S4',false,false],['缺曠率_趨勢斜率',false,false]];
+  for(const[name,wantZ,fill0]of targets){
+    const vals=feats.map(f=>{const v=f[name];return fill0&&!isFinite(v)?0:v;});
+    const gC=new Map(),gD=new Map();
+    vals.forEach((v,i)=>{
+      if(!gC.has(cohortKey[i]))gC.set(cohortKey[i],[]);gC.get(cohortKey[i]).push(v);
+      if(!gD.has(deptKey[i]))gD.set(deptKey[i],[]);gD.get(deptKey[i]).push(v);
+    });
+    const st=m=>{const o={};for(const[k,a]of m){o[k]={med:_median(a),std:_std1(a),size:a.length};}return o;};
+    const sC=st(gC),sD=st(gD);
+    vals.forEach((v,i)=>{
+      const c=sC[cohortKey[i]],d=sD[deptKey[i]];
+      const base=c.size>=10?c.med:d.med;
+      feats[i][name+'_cohort中位數差距']=v-base;
+      if(wantZ){
+        let sd=c.std;if(!isFinite(sd)||sd===0)sd=d.std;if(!isFinite(sd)||sd===0)sd=1;
+        feats[i][name+'_cohort_Z分數']=(v-base)/sd;
+      }
+    });
+  }
+  return feats;
+}
+
+function buildVector(F,featList){
+  return featList.map(nm=>{const v=F[nm];return(v==null||!isFinite(v))?0:v;});
 }
 
 // ─── ONNX 推論 ────────────────────────────────────────────────
@@ -693,32 +692,25 @@ function extractProb(probOutput,batchSize){
 
 async function runInference(raw,h,tp){
   const s=state[tp];
-  const featBuilder=tp==='perf'?buildPerfFeatures:buildDropFeatures;
-  const enc=raw.map(r=>{
-    const lk=(field,key)=>{if(!s.encoders)return 0;const m=s.encoders[key]||{};const v=r[field];if(v in m)return m[v];if('未知' in m)return m['未知'];return 0;};
-    return{...r,
-      '入學方式_編碼':lk('入學方式','入學方式'),
-      '學制_編碼':lk('學制','學制'),
-      '系所_編碼':lk('系所名稱','系所'),
-      '學生身分別_編碼':lk('學生身分別','學生身分別')
-    };
-  });
+  const mode=tp==='perf'?'mid':'early';
+  setP(tp,45,'計算特徵中（含 cohort 統計）...');
+  const featDicts=buildAll(raw,h,mode);
+  // 防呆：features.json 要求的特徵必須能算出來
+  const missing=s.featList.filter(nm=>!(nm in featDicts[0]));
+  if(missing.length)throw new Error('前端無法計算以下特徵（請檢查上傳檔欄位）：'+missing.join('、'));
   const results=[];const bs=100;
-  for(let i=0;i<enc.length;i+=bs){
-    const batch=enc.slice(i,i+bs);
-    const flat=new Float32Array(batch.map(r=>featBuilder(r,h)).flat());
+  for(let i=0;i<raw.length;i+=bs){
+    const dicts=featDicts.slice(i,i+bs);
+    const batch=raw.slice(i,i+bs);
+    const flat=new Float32Array(dicts.map(F=>buildVector(F,s.featList)).flat());
     const tensor=new ort.Tensor('float32',flat,[batch.length,s.featCount]);
-    const inputName=s.sess.inputNames[0]||'float_input';
+    const inputName=s.sess.inputNames[0]||'input';
     const out=await s.sess.run({[inputName]:tensor});
     const outKeys=Object.keys(out);
-    const labelOut=out['Label']||out['output_label']||out[outKeys[0]];
     const probOut=out['probabilities']||out['output_probability']||out[outKeys[1]];
-    const preds=labelOut?.data?Array.from(labelOut.data).map(v=>Number(v)):Array(batch.length).fill(0);
     const probs=extractProb(probOut,batch.length);
     batch.forEach((r,j)=>{
-      const rawProb=Math.max(0,Math.min(1,Number(probs[j])||0));
-      // 模型二（perf）高機率=落後風險高（班級百分比>80，直接輸出落後風險）
-      const riskProb=rawProb;
+      const riskProb=Math.max(0,Math.min(1,Number(probs[j])||0));
       const risk=getRiskLevel(riskProb,tp);
       results.push({
         學生識別碼:r['學生識別碼']||'',系所名稱:r['系所名稱']||'',
@@ -726,7 +718,7 @@ async function runInference(raw,h,tp){
         預測機率:riskProb,風險等級:risk.level,tag:risk.tag,barColor:risk.barColor
       });
     });
-    setP(tp,50+Math.round(((i+batch.length)/enc.length)*40),'AI 預測中...');
+    setP(tp,50+Math.round(((i+batch.length)/raw.length)*40),'AI 預測中...');
   }
   return results.sort((a,b)=>b.預測機率-a.預測機率);
 }
@@ -748,10 +740,10 @@ async function processFile(file,tp){
     const modelFile=tp==='perf'?'performance_model.onnx':'dropout_model.onnx';
     const jsonFile=tp==='perf'?'performance_model_features.json':'dropout_model_features.json';
     if(!s.sess)s.sess=await ort.InferenceSession.create('./'+modelFile);
-    if(!s.encoders){
+    if(!s.featList){
       const r=await fetch('./'+jsonFile);const j=await r.json();
-      s.encoders=j.encoders||null;
-      s.featCount=j['特徵數量']||s.featCount;
+      s.featList=j['特徵清單'];
+      s.featCount=s.featList.length;
     }
     setP(tp,50,'AI 預測中...');
     s.data=await runInference(raw,h,tp);
@@ -889,7 +881,7 @@ function downloadResults(tp){
   const isPerf=tp==='perf';
   const summaryRows=[
     {說明:'下載時間',內容:ts},{說明:'篩選學年',內容:yearStr},
-    {說明:'模型',內容:isPerf?'學習成效預測 v7-fs (S1-S4, 67 特徵, 合規版移除性別)':'休退學風險預警 v7-fs (S1-S2, 38 特徵, 合規版移除性別)'},
+    {說明:'模型',內容:isPerf?'學習成效預測 v9-fs (S1-S4, 73 特徵, 預測 S5-S6 後20%, 門檻0.16)':'休退學風險預警 v9-fs (S1-S2, 42 特徵, 兩年內休退學, 預警0.25/觀察0.15)'},
     {說明:'特徵時點',內容:isPerf?'S1-S4 中期':'S1-S2 早期'},
     {說明:'CV 表現',內容:isPerf?'ROC-AUC 96.1%、Recall 74.5%、F1 77.1%':'ROC-AUC 89.0%、Recall 60.2%、F1 68.9%'},
     {說明:'高風險人數',內容:hi},{說明:'中風險人數',內容:mi},{說明:'低風險人數',內容:lo},{說明:'總計',內容:f.length},{說明:'',內容:''}

@@ -1,23 +1,36 @@
-# student-risk-system
-# 學生學習風險評估系統
+# Student Risk System(v9 部署版)
 
-## 系統說明
-本系統提供三種學生學習風險分析方式：
-- **風險評估（規則式）**：依據成績、出缺席、獎懲、補助等規則評分（總分 1～12）
-- **學習成效預測（AI 模型）**：使用 XGBoost 機器學習模型預測學生最終學習成效落於班級後 50%（含休退學者）的機率（49 特徵；CV ROC-AUC 84.7%、F1 77.0%）
-- **休退學預警（AI 模型）**：使用 XGBoost 早期預警模型，僅以前 2 學期 30 特徵預測學生未來休學或退學的機率，提供 S2 結束前的早期介入名單（CV ROC-AUC 77.7%、Recall 56.5%；已採用 scale_pos_weight 處理類別不平衡）
+## 雙模型預警系統(v9-fs,2026-06)
 
-## 使用方式
-1. 開啟網站：https://nick111432009-beep.github.io/student-risk-system/
-2. 切換到想用的分頁
-3. 上傳學生 Excel 資料（含學務及成績資料）
-4. 選擇入學學年，查看風險名單
-5. 可下載 Excel 名單交付各處室
+### 模型一:休退學預警
+- 視窗:**S1–S2**(大一全年)→ 預測**入學兩年內**休退學(固定觀察窗標籤)
+- 特徵數:42(含 cohort 化同儕相對位階)
+- 門檻:**預警 ≥0.25(OOF F2)/ 觀察 ≥0.15(Youden's J)**
+- Holdout(112 學年):AUC 89.7% / PR-AUC 78.3% / Recall 71.8% / Precision 68.3%
+- 十種子平均 F1 63.6%±2.9pp;滾動回測跨屆 F1 64.4%±4.4pp
 
-## 模型檔案
-- `performance_model.onnx` / `performance_model_features.json`：學習成效模型（49 特徵）
-- `dropout_model.onnx` / `dropout_model_features.json`：休退學預警模型（30 特徵，前 2 學期）
-- `xgboost_model.onnx` / `model_features.json`：舊版單一模型（保留作為對照，目前已不被網頁呼叫）
+### 模型二:學習成效預測
+- 視窗:**S1–S4** → 預測 **S5–S6 時點班級百分比後 20%**(真未來預測)
+- 特徵數:73
+- 門檻:**預警 ≥0.16(OOF F2,恰為 Youden 切點 → 實質兩級制)**
+- Holdout(111 學年):AUC 97.2% / PR-AUC 88.9% / Recall 96.1% / Precision 64.2%
+- 十種子平均 F1 76.5%±0.9pp
 
-## 注意事項
-所有資料在使用者電腦本機處理，不會上傳至任何伺服器。
+## v9 升級重點
+- 標籤固定觀察窗(各屆答案定義一致、真未來預測)
+- F2 召回導向部署門檻(漏接成本 >> 誤抓成本)+ Youden/量能觀察線
+- 前端特徵引擎重寫:**由 features.json 特徵清單驅動**,cohort 統計與
+  LabelEncoder 於瀏覽器內由上傳檔即時計算 — 模型更新只需替換 onnx+json
+- 已通過「前端 JS vs notebook 特徵工程」逐格交叉驗證(max diff < 1e-6)
+  與「ONNX vs sklearn」推論一致性驗證(max diff < 1e-3)
+
+## 檔案說明
+- `dropout_model.onnx` — 模型一(42 特徵)
+- `performance_model.onnx` — 模型二(73 特徵)
+- `*_features.json` — 特徵清單(=向量順序)+ 門檻 + 版本(與訓練同源匯出)
+- `index.html` — 前端 UI(本機推論,資料不上傳)
+
+## 注意
+- 上傳檔需為全校學籍 Excel(同訓練格式):cohort 相對特徵與類別編碼
+  需由整批資料計算,單一學生無法獨立推論
+- 模型分數非機率,風險分級依據見 v9 技術報告 §10.3
