@@ -168,6 +168,7 @@ tbody td{font-size:13px;padding:12px 16px;border-top:1px solid var(--border);whi
   <div class="tabs">
     <button class="tab-btn active" onclick="switchTab('perf')">📚 學習成效預測（AI 模型）</button>
     <button class="tab-btn" onclick="switchTab('drop')">⚠️ 休退學預警（AI 模型）</button>
+    <button class="tab-btn" onclick="switchTab('inter')">🔥 雙模型交集（最高優先）</button>
   </div>
 
   <!-- ===== 分頁一：學習成效預測 ===== -->
@@ -389,6 +390,39 @@ tbody td{font-size:13px;padding:12px 16px;border-top:1px solid var(--border);whi
         <div id="body-drop-low" style="display:none"><div class="table-wrap"><table><thead><tr><th>學生識別碼</th><th>系所名稱</th><th>入學學年</th><th>學籍</th><th>風險等級</th><th>風險分數</th></tr></thead><tbody id="rows-drop-low"></tbody></table></div></div>
       </div>
       <div class="action-bar"><button class="dl-btn" onclick="downloadResults('drop')">⬇ 下載預警名單</button></div>
+    </div>
+  </div>
+
+  <!-- ===== 分頁三:雙模型交集 ===== -->
+  <div id="tab-inter" class="tab-content">
+    <div class="model-info" style="border-left:4px solid #b45309">
+      <b>🔥 雙模型交集名單</b>：同時被 <b>休退學模型（分數 ≥25%）</b>與 <b>學習成效模型（分數 ≥16%）</b>列為預警的學生——兩個獨立模型都亮紅燈，為<b>最高優先介入對象</b>。<br>
+      <b>📋 使用方式</b>：請先在前兩個分頁各完成一次預測（上傳同一份全校 Excel），本頁會自動以「學生識別碼」比對交集。<br>
+      <b>⚠️ 解讀提醒</b>：M1 的行動對象為 113 學年、M2 為 112 學年；其他屆別的交集屬歷史回顧。113 學年的 M2 分數僅供參考（S3–S4 尚未發生）。
+    </div>
+    <div class="metrics-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:14px 0">
+      <div class="metric-card"><div class="metric-label"><span class="metric-dot dot-red"></span>交集人數（雙預警）</div><div class="metric-num" id="cnt-inter">–</div><div class="metric-sub">人</div></div>
+      <div class="metric-card"><div class="metric-label">休退學模型預警</div><div class="metric-num" id="cnt-inter-m1">–</div><div class="metric-sub">人</div></div>
+      <div class="metric-card"><div class="metric-label">學習成效模型預警</div><div class="metric-num" id="cnt-inter-m2">–</div><div class="metric-sub">人</div></div>
+    </div>
+    <div id="inter-empty" style="padding:28px;text-align:center;color:#888;background:#fff;border-radius:12px">
+      尚無交集結果 —— 請先在「學習成效預測」與「休退學預警」兩個分頁各完成一次預測（建議上傳同一份檔案）。
+    </div>
+    <div id="inter-table-wrap" style="display:none;background:#fff;border-radius:12px;padding:16px;overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:13px" id="inter-table">
+        <thead><tr style="background:#7c2d12;color:#fff">
+          <th style="padding:8px 10px;text-align:left">#</th>
+          <th style="padding:8px 10px;text-align:left">學生識別碼</th>
+          <th style="padding:8px 10px;text-align:left">系所</th>
+          <th style="padding:8px 10px">入學學年</th>
+          <th style="padding:8px 10px">休退學分數</th>
+          <th style="padding:8px 10px">學習成效分數</th>
+          <th style="padding:8px 10px">綜合分數</th>
+          <th style="padding:8px 10px;text-align:left">最終學籍狀況</th>
+        </tr></thead>
+        <tbody id="inter-tbody"></tbody>
+      </table>
+      <div class="action-bar" style="margin-top:14px"><button class="dl-btn" onclick="downloadIntersection()">⬇ 下載交集名單 Excel</button></div>
     </div>
   </div>
 </div>
@@ -882,7 +916,7 @@ function downloadResults(tp){
     {說明:'下載時間',內容:ts},{說明:'篩選學年',內容:yearStr},
     {說明:'模型',內容:isPerf?'學習成效預測 v9-fs (S1-S4, 73 特徵, 預測 S5-S6 後20%, 門檻0.16)':'休退學風險預警 v9-fs (S1-S2, 42 特徵, 兩年內休退學, 預警0.25/觀察0.15)'},
     {說明:'特徵時點',內容:isPerf?'S1-S4 中期':'S1-S2 早期'},
-    {說明:'CV 表現',內容:isPerf?'ROC-AUC 96.1%、Recall 74.5%、F1 77.1%':'ROC-AUC 89.0%、Recall 60.2%、F1 68.9%'},
+    {說明:'模型表現(v9 留存測試)',內容:isPerf?'ROC-AUC 97.2%、PR-AUC 88.9%、Recall 96.1%、Precision 64.2%(部署門檻)':'ROC-AUC 89.7%、PR-AUC 78.3%、Recall 71.8%、Precision 68.3%(部署門檻)'},
     {說明:'高風險人數',內容:hi},{說明:'中風險人數',內容:mi},{說明:'低風險人數',內容:lo},{說明:'總計',內容:f.length},{說明:'',內容:''}
   ];
   const dataRows=f.map(d=>({學生識別碼:d.學生識別碼,系所名稱:d.系所名稱,入學學年:d.入學學年,最終學籍狀況:d.最終學籍狀況,風險等級:d.風險等級,風險分數:(d.預測機率*100).toFixed(2)+'%'}));
@@ -896,16 +930,96 @@ function downloadResults(tp){
 // ─── UI 事件 ──────────────────────────────────────────────────
 function switchTab(tp){
   currentTab=tp;
-  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',['perf','drop'][i]===tp));
-  document.querySelectorAll('.tab-content').forEach((c,i)=>c.classList.toggle('active',['perf','drop'][i]===tp));
+  const TABS=['perf','drop','inter'];
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',TABS[i]===tp));
+  document.querySelectorAll('.tab-content').forEach((c,i)=>c.classList.toggle('active',TABS[i]===tp));
+  const btn=document.getElementById('header-dl-btn');
+  if(tp==='inter'){
+    const n=renderIntersection();
+    btn.style.display=n>0?'block':'none';
+    btn.textContent='⬇ 下載交集名單';
+    return;
+  }
   const s=state[tp];
   const hasData=s.selYears.size>0&&s.data.length>0;
-  const btn=document.getElementById('header-dl-btn');
   btn.style.display=hasData?'block':'none';
   btn.textContent=tp==='perf'?'⬇ 下載預測結果':'⬇ 下載預警名單';
 }
 
-function handleHeaderDownload(){downloadResults(currentTab);}
+// ─── 雙模型交集 ───────────────────────────────────────────────
+function computeIntersection(){
+  const m1=state.drop.data.filter(d=>d.風險等級==='高風險');
+  const m2=state.perf.data.filter(d=>d.風險等級==='高風險');
+  if(!m1.length||!m2.length)return{rows:[],n1:m1.length,n2:m2.length,ready:state.drop.data.length>0&&state.perf.data.length>0};
+  const map=new Map(m1.map(d=>[String(d.學生識別碼),d]));
+  const rows=[];
+  for(const p of m2){
+    const k=String(p.學生識別碼);
+    if(map.has(k)){
+      const dr=map.get(k);
+      rows.push({學生識別碼:k,系所名稱:p.系所名稱||dr.系所名稱,入學學年:p.入學學年||dr.入學學年,
+        休退學分數:dr.預測機率,學習成效分數:p.預測機率,
+        綜合分數:(dr.預測機率+p.預測機率)/2,最終學籍狀況:p.最終學籍狀況||dr.最終學籍狀況||''});
+    }
+  }
+  rows.sort((a,b)=>b.綜合分數-a.綜合分數);
+  return{rows,n1:m1.length,n2:m2.length,ready:true};
+}
+
+function renderIntersection(){
+  const r=computeIntersection();
+  document.getElementById('cnt-inter').textContent=r.ready?r.rows.length:'–';
+  document.getElementById('cnt-inter-m1').textContent=state.drop.data.length?r.n1:'–';
+  document.getElementById('cnt-inter-m2').textContent=state.perf.data.length?r.n2:'–';
+  const empty=document.getElementById('inter-empty'),wrap=document.getElementById('inter-table-wrap');
+  if(!r.ready||!r.rows.length){
+    empty.style.display='block';wrap.style.display='none';
+    if(r.ready&&!r.rows.length)empty.textContent='兩模型皆已完成預測，目前沒有同時被雙模型預警的學生。';
+    return 0;
+  }
+  empty.style.display='none';wrap.style.display='block';
+  const tb=document.getElementById('inter-tbody');tb.innerHTML='';
+  r.rows.forEach((d,i)=>{
+    const tr=document.createElement('tr');
+    tr.style.background=i%2?'#fef7f2':'#fff';
+    tr.innerHTML=`<td style="padding:7px 10px">${i+1}</td>
+      <td style="padding:7px 10px">${d.學生識別碼}</td>
+      <td style="padding:7px 10px">${d.系所名稱||''}</td>
+      <td style="padding:7px 10px;text-align:center">${d.入學學年||''}</td>
+      <td style="padding:7px 10px;text-align:center;color:#dc2626;font-weight:600">${(d.休退學分數*100).toFixed(1)}%</td>
+      <td style="padding:7px 10px;text-align:center;color:#1a56db;font-weight:600">${(d.學習成效分數*100).toFixed(1)}%</td>
+      <td style="padding:7px 10px;text-align:center;font-weight:700">${(d.綜合分數*100).toFixed(1)}%</td>
+      <td style="padding:7px 10px">${d.最終學籍狀況||''}</td>`;
+    tb.appendChild(tr);
+  });
+  return r.rows.length;
+}
+
+function downloadIntersection(){
+  const r=computeIntersection();
+  if(!r.rows.length){alert('目前沒有交集名單可下載');return;}
+  const now=new Date();
+  const ts=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  const summaryRows=[
+    {說明:'下載時間',內容:ts},
+    {說明:'名單定義',內容:'同時被休退學模型(≥0.25)與學習成效模型(≥0.16)列為預警之學生(雙預警=最高優先)'},
+    {說明:'模型版本',內容:'v9-fs(休退學 42 特徵 / 學習成效 73 特徵,F2 召回導向門檻)'},
+    {說明:'排序',內容:'依綜合分數(兩模型分數平均)降序'},
+    {說明:'交集人數',內容:r.rows.length},
+    {說明:'休退學模型預警數',內容:r.n1},{說明:'學習成效模型預警數',內容:r.n2},
+    {說明:'建議行動',內容:'一週內優先約談,並同步通報系上與學務/教務承辦'},
+    {說明:'提醒',內容:'113 學年之學習成效分數僅供參考(S3-S4 尚未發生);分數為風險排序用,非機率'},
+  ];
+  const dataRows=r.rows.map((d,i)=>({優先序:i+1,學生識別碼:d.學生識別碼,系所名稱:d.系所名稱,入學學年:d.入學學年,
+    休退學分數:(d.休退學分數*100).toFixed(2)+'%',學習成效分數:(d.學習成效分數*100).toFixed(2)+'%',
+    綜合分數:(d.綜合分數*100).toFixed(2)+'%',最終學籍狀況:d.最終學籍狀況,建議行動:'一週內約談+通報系上'}));
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(summaryRows),'摘要');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(dataRows),'雙模型交集名單');
+  XLSX.writeFile(wb,`雙模型交集名單_${ts.replace(':','').replace(' ','_')}.xlsx`);
+}
+
+function handleHeaderDownload(){if(currentTab==='inter'){downloadIntersection();}else{downloadResults(currentTab);}}
 
 function resetTab(tp){
   const s=state[tp];
